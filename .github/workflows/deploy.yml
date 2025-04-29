@@ -1,0 +1,38 @@
+name: 🛠️ Build & Deploy Portfolio
+
+# Trigger on pushes to main (or your default branch)
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout your repo
+      - uses: actions/checkout@v3
+
+      # 2. If using Node (React/Vue/etc.), set up Node.js
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # 3. Install dependencies (skip if plain HTML)
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Build your site (adjust to your framework)
+      - name: Build
+        run: npm run build
+
+      # 5. Deploy to gh-pages branch
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./build      # ← change to your output folder (e.g. ./public or /docs)
+          user_name: github-actions  # optional: commit author name
+          user_email: github-actions@github.com
