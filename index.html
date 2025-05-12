@@ -1,11 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Valareza Arezehgar – Portfolio</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .project-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .project-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      width: 90%;
+      position: relative;
+      list-style-position: inside;
+    }
+
+    .modal-content a {
+      display: block;
+      margin-top: 10px;
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .modal-content li {
+      margin-bottom: 0.5em;
+    }
+
+    .modal-content a:hover {
+      text-decoration: underline;
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+  </style>
 </head>
+
 <body>
   <header class="site-header">
     <div class="container">
@@ -23,61 +94,18 @@
   <main>
     <section id="about" class="container section">
       <h2>About Me</h2>
-      <p>Hi. Im Vala.</p>
+      <p>Hi. I'm Vala.</p>
     </section>
 
     <section id="projects" class="container section">
       <h2>Projects</h2>
-      <div class="projects-grid">
-        <!-- Repeat this card for each project -->
-        <article class="project-card">
-          <h3>LUNA</h3>
-          <p>Assistive glasses attachment using OCR & TTS to provide real-time audio narration</p>
-          <a href="https://www.youtube.com/watch?v=MK9qr3ZQ_Ns&ab_channel=LUNAtech">View demo</a>
-          <a href="https://www.wearluna.ca/">Visit the website</a>
-          <a href="https://github.com/Valagit12/Qhacks2025">View GitHub</a>
-          <a href="https://devpost.com/software/luna-nblywg">View Devpost</a>
-        </article>
-        <article class="project-card">
-          <h3>Undergraduate Thesis</h3>
-          <p>An analysis of the racetrack problem as a heuristic search benchmark</p>
-          <a href="#">No links available yet. Waiting for it to be marked tbh.</a>
-        </article>
-        <article class="project-card">
-          <h3>BSE Protocol</h3>
-          <p>A simple, hassle-free way of protecting your bank statements while still being able to keep them indefinitely with you offline.</p>
-          <a href="https://devpost.com/software/bank-statement-encryption-bse-protocol">View on Devpost →</a>
-          <a href="https://github.com/brianw-cho/BSEncryption">View on GitHub →</a>
-        </article>
-        <article class="project-card">
-          <h3>Discord Learn</h3>
-          <p>Discord Learn helps instructors begin and manage a classroom on their own Discord server to teach in an online setting.</p>
-          <a href="https://devpost.com/software/discord-learn">View on Devpost →</a>
-          <a href="https://github.com/brianw-cho/Discord-Learn">View on GitHub →</a>
-          <a href="https://sites.google.com/view/discord-learn/for-students">Visit the Website →</a>
-        </article>
-        <article class="project-card">
-          <h3>SafeSpace</h3>
-          <p>SafeSpace is mobile app with an emergency button which sends out an SOS to other nearby users</p>
-          <a href="https://github.com/Valagit12/SafeSpace/blob/main/README.md">View on GitHub →</a>
-        </article>
-        <article class="project-card">
-          <h3>Street Kombat X</h3>
-          <p>Its a fighting game built entirely in Java. More characters coming soon I promise :)</p>
-          <a href="https://github.com/Valagit12/Street-Kombat-X">View on GitHub →</a>
-        </article>
-        <article class="project-card">
-          <h3>Planet Jump</h3>
-          <p>Mobile game developed in Unity. Jump from planet to planet and avoid asteroids along the way.</p>
-          <a href="https://github.com/brianw-cho/planet-jump">View on GitHub →</a>
-        </article>
-      </div>
+      <div class="projects-grid"></div>
     </section>
 
     <section id="contact" class="container section">
       <h2>Contact</h2>
       <p>Email: <a href="mailto:valareza.arezehgar@gmail.com">valareza.arezehgar@gmail.com</a></p>
-      <p>Or find me on <a href="https://www.linkedin.com/in/valareza-arezehgar/">LinkedIn</a></p>
+      <p>Find me on <a href="https://www.linkedin.com/in/valareza-arezehgar/">LinkedIn</a></p>
     </section>
   </main>
 
@@ -86,5 +114,27 @@
       <p>© 2025 Valareza Arezehgar. All rights reserved.</p>
     </div>
   </footer>
+
+  <div id="projectModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3 id="modalTitle"></h3>
+      <div id="modalBody"></div>
+      <div id="modalLinks"></div>
+    </div>
+  </div>
+
+
+  <div id="projectModal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3 id="modalTitle"></h3>
+      <div id="modalBody"></div>
+      <div id="modalLinks"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./script.js"></script>
 </body>
+
 </html>
