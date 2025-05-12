@@ -33,6 +33,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./build      # ← change to your output folder (e.g. ./public or /docs)
+          publish_dir: ./      # ← change to your output folder (e.g. ./public or /docs)
           user_name: github-actions  # optional: commit author name
           user_email: github-actions@github.com
