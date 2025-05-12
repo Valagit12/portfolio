@@ -8,13 +8,13 @@
       { "href": "https://github.com/Valagit12/Qhacks2025", "text": "View GitHub" },
       { "href": "https://devpost.com/software/luna-nblywg", "text": "View Devpost" }
     ],
-    "detailsHTML": "<p><strong>Tech Stack:</strong> ESP32, React Native, OCR API, Google TTS</p><ul><li>Real-time BLE communication</li><li>Optimized latency under 500ms</li><li>Assistive device showcased at Hult Prize Nationals</li></ul>"
+    "detailsHTML": "<p><strong>Tech Stack:</strong> ESP32, React Native, Claude 3.5 Sonnet API, Google TTS</p><ul><li>BLE communication</li><li>Network connectivity</li><li>Assistive device showcased at Hult Prize Nationals</li></ul>"
   },
   {
     "title": "Undergraduate Thesis",
-    "summary": "An analysis of the racetrack problem as a heuristic search benchmark",
+    "summary": "An analysis of the racetrack problem as a heuristic search benchmark. No links yet, working on publishing rights. Click for abstract.",
     "links": [],
-    "detailsHTML": "<p>Formalized and evaluated the racetrack problem for heuristic search benchmarks. Defined domain dynamics, variants (New Hampshire, Airbag), and proposed two novel heuristics. Provided proofs of admissibility and consistency. Benchmarked with A* and Weighted A*.</p>"
+    "detailsHTML": "<p><strong>Tech Stack:</strong> C++, GUnit</p><p>The racetrack problem is a state-space search problem benchmark that is often used in heuristic search studies. Other papers that use this domain have defined the problem informally, making the benchmark difficult to standardize. This thesis aims to formally define and empirically evaluate the racetrack problem to provide a uniform benchmark for future research. In particular, we formalize the implementation details for the domain’s states, actions, transitions, and goal tests. We then delineate the two variants of the problem: New Hampshire (where collisions are prohibited) and Airbag. Next, we provide rigorous definitions for the heuristics used in this domain, as well as two new heuristics that generalize well to the problem. For all heuristics, we provide proofs of admissibility and consistency. Finally, we assess the problem variants and heuristics across multiple maps using both A* and Weighted A*. We examine the results for both algorithms to understand the behaviors of the racetrack heuristics and variants.</p>"
   },
   {
     "title": "BSE Protocol",
@@ -23,7 +23,7 @@
       { "href": "https://devpost.com/software/bank-statement-encryption-bse-protocol", "text": "View on Devpost" },
       { "href": "https://github.com/brianw-cho/BSEncryption", "text": "View on GitHub" }
     ],
-    "detailsHTML": "<p><strong>Tech Stack:</strong> Python, AES Encryption</p><ul><li>Local encryption/decryption without cloud services</li><li>Secure long-term offline storage of sensitive documents</li></ul>"
+    "detailsHTML": "<p><strong>Tech Stack:</strong> Flutter, Dart, AES PDF Encryption</p><ul><li>Local encryption/decryption without cloud services</li><li>Secure long-term offline storage of sensitive documents</li></ul>"
   },
   {
     "title": "Discord Learn",
@@ -33,7 +33,7 @@
       { "href": "https://github.com/brianw-cho/Discord-Learn", "text": "View on GitHub" },
       { "href": "https://sites.google.com/view/discord-learn/for-students", "text": "Visit Website" }
     ],
-    "detailsHTML": "<p><strong>Tech Stack:</strong> Discord.js, Node.js</p><ul><li>Automated classroom management on Discord servers</li><li>Role-based permissions, attendance tracking</li></ul>"
+    "detailsHTML": "<p><strong>Tech Stack:</strong> Discord.py</p><ul><li>Automated classroom management on Discord servers</li><li>Role-based permissions, attendance tracking</li></ul>"
   },
   {
     "title": "SafeSpace",
@@ -41,15 +41,15 @@
     "links": [
       { "href": "https://github.com/Valagit12/SafeSpace/blob/main/README.md", "text": "View on GitHub" }
     ],
-    "detailsHTML": "<p><strong>Tech Stack:</strong> Flutter, Firebase</p><ul><li>Real-time emergency alerts to nearby users</li><li>Geo-location based safety network</li></ul>"
+    "detailsHTML": "<p><strong>Tech Stack:</strong> Flutter, Flask, Firebase</p><ul><li>Real-time emergency alerts to nearby users</li><li>Geo-location based safety network</li></ul>"
   },
   {
     "title": "Street Kombat X",
-    "summary": "A Java-based fighting game. More characters coming soon :)",
+    "summary": "A Java-based fighting game. More characters coming soon. I promise :)",
     "links": [
       { "href": "https://github.com/Valagit12/Street-Kombat-X", "text": "View on GitHub" }
     ],
-    "detailsHTML": "<p><strong>Tech Stack:</strong> Java, Swing</p><ul><li>Custom fighting mechanics implementation</li><li>Sprites, animations, basic AI opponents</li></ul>"
+    "detailsHTML": "<p><strong>Tech Stack:</strong> Pure Java, OOP</p><ul><li>Custom fighting mechanics implementation</li><li>Sprites, animations, basic AI opponents</li></ul>"
   },
   {
     "title": "Planet Jump",
