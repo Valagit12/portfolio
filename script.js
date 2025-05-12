@@ -1,6 +1,6 @@
-const projects = await fetch('./projects.json').then(r => r.json());
-
+const projects = await fetch('./projects.json').then(data => data.json());
 const projectsGrid = document.querySelector('.projects-grid');
+
 projects.forEach(project => {
     const card = document.createElement('article');
     card.className = 'project-card';
@@ -22,7 +22,9 @@ const closeBtn = document.querySelector('.close');
 
 document.querySelectorAll('.project-card').forEach(card => {
     card.addEventListener('click', (event) => {
-        if (event.target.tagName.toLowerCase() === 'a') return;  
+
+        if (event.target.tagName.toLowerCase() === 'a') return;  // reject opening modal if its an a tag
+        
         const detailsHidden = card.querySelector('.project-details-hidden');
         const links = card.querySelectorAll('a');
 
@@ -42,6 +44,8 @@ document.querySelectorAll('.project-card').forEach(card => {
         });
 
         modal.classList.add('show');
+
+        event.stopPropagation();
     });
 });
 
@@ -51,6 +55,7 @@ window.onclick = (event) => {
     if (event.target === modal) modal.classList.remove('show');
 };
 
+//scroll to get rid of menu bar
 let lastScrollY = window.scrollY;
 const header = document.querySelector('.site-header');
 
