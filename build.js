@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
 
-const distDir = path.join(__dirname, 'dist');
+const distDir = path.join(__dirname, '');
 const publicDir = path.join(__dirname, 'public');
 const viewsDir = path.join(__dirname, 'views');
 
