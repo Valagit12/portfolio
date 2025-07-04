@@ -1,0 +1,36 @@
+.name {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+
+.name .original {
+  position: relative;
+  z-index: 2;
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 0.8s ease, opacity 0.8s ease;
+  padding-left: 1rem;
+}
+
+.name .replacement {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 0.8s ease, opacity 0.8s ease;
+}
+
+.name:hover .original {
+  transform: translateX(100%);
+  opacity: 0;
+}
+.name:hover .replacement {
+  transform: translateX(0);
+  opacity: 1;
+}

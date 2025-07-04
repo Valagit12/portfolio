@@ -1,0 +1,91 @@
+.tracking-detail {
+    padding: 3rem 0
+}
+
+// .tracking-list {
+//  border:1px solid #e5e5e5
+// }
+
+.tracking-item {
+    position: relative;
+    padding-left: 3rem;
+    padding-bottom: 1.5rem;
+    padding-right: 2rem;
+    padding-top: 1.5rem;
+    font-size: .9rem;
+    color: $light;
+    min-height: 5rem
+}
+
+.tracking-item span {
+    display: block;
+    color: #888;
+    font-size: 85%
+}
+
+.tracking-icon {
+    position: absolute;
+    top: 1.6rem;
+    left: 0.37rem;
+    width: 3.6rem;
+    height: 3.6rem;
+    z-index: 10;
+    text-align: center;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.icon-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+#education, #experience {
+        width: 70vw;
+        max-width: 700px;
+        min-width: 300px;
+        transition: opacity 0.1s ease-in-out;
+}
+
+#education {
+    display: none;
+    opacity: 0;
+}
+
+#experience {
+    display: block;
+    opacity: 1;
+}
+
+.timeline {
+    position: relative;
+    border-right: 1px solid $light;
+    height: 100%;
+    width: 35px;
+}
+
+
+@media (max-width: 300px) {
+
+    #education, #experience {
+        overflow: auto;
+    }
+
+}
+
+.over {
+    overflow: visible;
+}
+
+
+
+// .col {
+//   outline: 1px solid red !important;
+//   text-align: center;
+// }
+
+
+/* ID selectors are more specific than class selectors in Bootstrap */

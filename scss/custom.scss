@@ -1,0 +1,32 @@
+
+
+$primary: black;
+$secondary: #4a90e2;
+
+$text-primary: #4a90e2;
+
+$body-bg: #121212;
+$body-color: #ffffff;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --clr-bg: #f9f9f9;
+  --clr-accent: #4a90e2;
+  --clr-text: #333;
+  --font-sans: 'Helvetica Neue', Arial, sans-serif;
+}
+
+
+
+@import "../node_modules/bootstrap/scss/bootstrap";
+@import "./other.scss";
+@import "./about.scss";
+@import "./workedu.scss";
+@import "./projects.scss";

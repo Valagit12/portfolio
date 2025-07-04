@@ -1,0 +1,32 @@
+{
+  "name": "portfolio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "devStart": "concurrently \"nodemon server.js\" \"sass --watch scss/custom.scss public/css/bootstrap-custom.css\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Valagit12/portfolio.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Valagit12/portfolio/issues"
+  },
+  "homepage": "https://github.com/Valagit12/portfolio#readme",
+  "dependencies": {
+    "bootstrap": "^5.3.7",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "nodemon": "^3.1.10",
+    "sass": "^1.89.2"
+  }
+}

@@ -1,0 +1,52 @@
+
+main {
+  position: relative;
+  z-index: 1;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--clr-text);
+  background-color: var(--clr-bg);
+  line-height: 1.6;
+}
+
+header div {
+  z-index: 100;
+}
+
+.none {
+  pointer-events: none;
+}
+
+.pointerall {
+  pointer-events: all;
+}
+
+.backdrop-blur {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.2); 
+  z-index:100;
+  width: 100%;
+}
+
+.black {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width:100%;
+  background-color: rgba(0, 0, 0, 0.848); 
+  z-index: -5;
+
+}
+
+#fluid {
+  background-color: black;
+  top: 0;
+  z-index: -100;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
