@@ -9,7 +9,6 @@ app.get('/new', (req, res) => {
     res.send('User New Form');
 });
 
-// Has to come after all the other ones because of the dynamic parameters
 app.route("/:id").get((req, res) => {
     res.send(`Get User with ID ${req.params.id}`);
     console.log(req.user);
@@ -21,7 +20,6 @@ app.route("/:id").get((req, res) => {
 })
 
 const users = [{name: "Kyle"}];
-// middleware, runs between request being sent to server and response to user
 app.param("id", (req, res, next, id) => {
     req.user = users[id];
     next()
