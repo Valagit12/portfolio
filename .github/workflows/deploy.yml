@@ -20,13 +20,13 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm start
+        run: npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./      
+          publish_dir: ./dist      
           user_name: github-actions 
           user_email: github-actions@github.com
