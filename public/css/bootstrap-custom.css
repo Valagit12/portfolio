@@ -12010,9 +12010,6 @@ header div {
 }
 
 #education, #experience {
-  width: 70vw;
-  max-width: 700px;
-  min-width: 300px;
   transition: opacity 0.1s ease-in-out;
 }
 
@@ -12035,11 +12032,6 @@ header div {
   width: 35px;
 }
 
-@media (max-width: 300px) {
-  #education, #experience {
-    overflow: auto;
-  }
-}
 .over {
   overflow: visible;
 }
@@ -12162,6 +12154,12 @@ header div {
 
 #projects {
   max-width: 700px;
+  min-width: 300px;
+}
+
+#workedu {
+  max-width: 700px;
+  min-width: 300px;
 }
 
 /*# sourceMappingURL=bootstrap-custom.css.map */
