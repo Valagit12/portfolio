@@ -11984,14 +11984,19 @@ header div {
   font-size: 85%;
 }
 
+.timeline {
+  position: relative; /* establish a positioning context */
+  overflow: visible; /* ensure the icon isn’t clipped */
+}
+
 .tracking-icon {
   position: absolute;
-  top: 1.6rem;
-  left: 0.37rem;
-  width: 3.6rem;
-  height: 3.6rem;
+  top: 50%;
+  transform: translateY(-50%) translateX(-50%);
+  left: 100%;
+  width: 4rem;
+  height: 4rem;
   z-index: 10;
-  text-align: center;
   border-radius: 50%;
   overflow: hidden;
 }
@@ -12022,8 +12027,10 @@ header div {
 }
 
 .timeline {
-  position: relative;
+  display: flex;
   border-right: 1px solid #f8f9fa;
+  justify-content: flex-end;
+  align-items: center;
   height: 100%;
   width: 35px;
 }
