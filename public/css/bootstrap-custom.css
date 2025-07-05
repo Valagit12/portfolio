@@ -11886,9 +11886,14 @@ header div {
 }
 
 .none {
-  pointer-events: none;
+  pointer-events: all;
 }
 
+@media (pointer: fine) and (hover: hover) {
+  .none {
+    pointer-events: none;
+  }
+}
 .pointerall {
   pointer-events: all;
 }
@@ -12053,6 +12058,8 @@ header div {
   width: 90%;
   position: relative;
   list-style-position: inside;
+  max-height: 100%;
+  overflow: auto;
 }
 
 .modal-content a {

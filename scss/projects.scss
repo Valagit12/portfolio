@@ -18,6 +18,8 @@
   width: 90%;
   position: relative;
   list-style-position: inside;
+  max-height: 100%;
+  overflow: auto;
 }
 
 .modal-content a {

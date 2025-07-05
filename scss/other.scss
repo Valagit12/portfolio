@@ -16,8 +16,15 @@ header div {
 }
 
 .none {
-  pointer-events: none;
+  pointer-events: all;
 }
+
+@media (pointer: fine) and (hover: hover) {
+  .none {
+    pointer-events: none;
+  }
+}
+
 
 .pointerall {
   pointer-events: all;
