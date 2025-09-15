@@ -11,7 +11,6 @@ app.get('/', logger, (req, res) => {
 
 app.use(express.static('public'));
 
-// app.use(express.static('public'));
 
 const resumeRouter = require('./routes/resume');
 

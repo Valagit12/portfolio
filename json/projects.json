@@ -15,7 +15,7 @@
     "title": "Undergraduate Thesis",
     "summary": "An analysis of the racetrack problem as a heuristic search benchmark. No links yet, working on publishing rights. Click for abstract.",
     "techStack": ["C++", "GUnit"],
-    "links": [],
+    "links": [{"href": "https://valagit12.github.io/portfolio/img/analysis.pdf", "text": "Read it here"}],
     "detailsHTML": "<p><strong>Tech Stack:</strong> C++, GUnit</p><p>The racetrack problem is a state-space search problem benchmark that is often used in heuristic search sstudies. Other papers that use this domain have defined the problem informally, making the benchmark difficult to standardize. This thesis aims to formally define and empirically evaluate the racetrack problem to provide a uniform benchmark for future research. In particular, we formalize the implementation details for the domain’s states, actions, transitions, and goal tests. We then delineate the two variants of the problem: New Hampshire (where collisions are prohibited) and Airbag. Next, we provide rigorous definitions for the heuristics used in this domain, as well as two new heuristics that generalize well to the problem. For all heuristics, we provide proofs of admissibility and consistency. Finally, we assess the problem variants and heuristics across multiple maps using both A* and Weighted A*. We examine the results for both algorithms to understand the behaviors of the racetrack heuristics and variants.</p>"
   },
   {

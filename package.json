@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "devStart": "concurrently \"nodemon server.js\" \"sass --watch scss/custom.scss public/css/bootstrap-custom.css\"",
-    "build" : "node build.js"
+    "build": "node build.js"
   },
   "repository": {
     "type": "git",
