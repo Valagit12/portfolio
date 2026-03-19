@@ -1,5 +1,26 @@
 [
   {
+    "title": "Xournote",
+    "summary": "A real-time collaborative notebook app where multiple users can create, edit, and share notes seamlessly in the browser.",
+    "techStack": [
+      "React",
+      "Express",
+      "WebSockets",
+      "Zod",
+      "Node.js",
+      "PM2",
+      "Nginx",
+      "AWS"
+    ],
+    "links": [
+      {
+        "href": "https://xournote.com",
+        "text": "Visit Xournote"
+      }
+    ],
+    "detailsHTML": "<p><strong>Tech Stack:</strong> React, Express, WebSockets, Zod, Node.js, PM2, Nginx, AWS</p><ul><li>Full-stack note-taking platform with a React frontend and Express backend communicating over REST and WebSockets</li><li>Live multi-user collaboration with real-time syncing across notebook sessions</li><li>Shared validation layer using Zod to ensure data integrity between client and server</li><li>Deployed on AWS with PM2 process management and Nginx reverse proxy over HTTPS</li></ul>"
+  },
+  {
     "title": "LUNA",
     "summary": "Assistive glasses attachment using OCR & TTS to provide real-time audio narration",
     "techStack": [
