@@ -16,6 +16,8 @@
 //  3. A connecting hit sets the defender's hitstun or blockstun from the
 //     attacker's remaining recovery, so frame advantage always matches the
 //     move's onHit / onBlock value. Knockdown hits floor them instead.
+//     The first special in a combo stuns as usual; a second special in the
+//     same combo knocks down, so special -> 1,1 -> special can't loop forever.
 //
 // tick() returns contact events; GameState turns them into hitstop,
 // sparks and screen shake.
@@ -35,7 +37,7 @@ const PUSH_CAP = 5;
 // Attackers pushed off a cornered opponent travel at most this far
 const MAX_CORNER_PUSH = 40;
 
-const newCombo = () => ({ count: 0, damage: 0, pop: 0, ended: false, hold: 0 });
+const newCombo = () => ({ count: 0, damage: 0, specials: 0, pop: 0, ended: false, hold: 0 });
 
 const overlap = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
 
@@ -230,13 +232,19 @@ export class Combat {
         }
 
         const comboing = def.hitstun > 0;
+        const combo = this.combos[att.playerNum];
+        if (!comboing || combo.count === 0 || combo.ended) Object.assign(combo, newCombo());
+
+        // A repeat special in one combo knocks down instead of stunning again
+        const special = hit.level === "special";
+        if (special && combo.specials > 0) hit = { ...hit, knockdown: true };
+
         def.takeHit(hit, attackerTicks, away);
         if (!def.knockdown) this._push(att, def, hit.push, away);
 
-        const combo = this.combos[att.playerNum];
-        if (!comboing || combo.count === 0 || combo.ended) Object.assign(combo, newCombo());
         combo.count += 1;
         combo.damage += hit.damage;
+        if (special) combo.specials += 1;
         combo.pop = 8;
 
         this._startMeasure(att, def, label, def.knockdown ? "hit (knockdown)" : "hit");
