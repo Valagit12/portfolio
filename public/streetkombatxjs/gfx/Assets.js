@@ -1,7 +1,8 @@
 // src/gfx/Assets.js
 
 import { ImageLoader } from "./ImageLoader.js";
-import { SpriteSheet } from "./SpriteSheet.js";
+import { SpriteSheet, anchorFeet } from "./SpriteSheet.js";
+import { DOM_SCALE_X, KASAI_SCALE_X } from "./spriteScale.js";
 
 export class Assets {
     // Intro images
@@ -231,6 +232,12 @@ export class Assets {
             64,
             21
         );
+
+        // Undo the horizontal squash baked into wide poses
+        domSheetPlayer1.scaleX = DOM_SCALE_X;
+        domSheetPlayer2.scaleX = DOM_SCALE_X;
+        kasaiSheetPlayer1.scaleX = KASAI_SCALE_X;
+        kasaiSheetPlayer2.scaleX = KASAI_SCALE_X;
 
         // Backgrounds
         const fireTempleSheet = new SpriteSheet(
@@ -619,8 +626,26 @@ export class Assets {
             );
         }
 
-        Assets.menuMusic = new Audio("./MenuOST.wav"); // relative to index.html
-        Assets.menuMusic.loop = true;
+        Assets.menuMusic = new Audio();
+        // Keep the fighters' feet planted through the idle loop
+        for (const frames of [
+            Assets.dom_stance_player1,
+            Assets.dom_stance_player2,
+            Assets.kasai_stance_player1,
+            Assets.kasai_stance_player2,
+        ]) {
+            anchorFeet(frames);
+        }
+
+        // Don't download the (large) track at all unless sound is on; play() loads it on demand
+        Assets.menuMusic.preload = Assets.soundEnabled ? "auto" : "none";
+        Assets.menuMusic.src = "./MenuOST.wav"; // relative to index.html
+        // Loop manually so each repeat also skips the intro (native loop restarts at 0)
+        Assets.menuMusic.loop = false;
+        Assets.menuMusic.addEventListener("ended", () => {
+            Assets.menuMusic.currentTime = Assets.MENU_MUSIC_START;
+            Assets.menuMusic.play().catch(() => {});
+        });
 
         // Try to preload audio so it's ready when we play it
         await new Promise((resolve) => {
@@ -634,14 +659,58 @@ export class Assets {
         });
     }
 
-    static playMenuMusic() {
-        if (!Assets.menuMusic) return;
+    // Chosen on the start screen; toggled from the page header
+    static soundEnabled = true;
 
-        Assets.menuMusic.currentTime = 0;
-        Assets.menuMusic
-            .play()
-            .catch((err) => {
-                console.warn("Menu music play was blocked (likely autoplay):", err);
-            });
+    /** Turn the menu music on or off. Called from a click, so play() is allowed. */
+    static setSoundEnabled(on) {
+        Assets.soundEnabled = on;
+        if (!Assets.menuMusic) return;
+        if (on) {
+            Assets.playMenuMusic();
+        } else {
+            Assets.menuMusic.pause();
+        }
+    }
+
+    // Seconds into MenuOST.wav where playback starts (the first ~2s are silence)
+    static MENU_MUSIC_START = 4;
+    static #menuMusicStarted = false;
+
+    /**
+     * Start the menu music from MENU_MUSIC_START. Safe to call repeatedly:
+     * once it has started it is never restarted.
+     * @returns {Promise<boolean>} true if the music is playing.
+     */
+    static async playMenuMusic() {
+        const music = Assets.menuMusic;
+        if (!music || !Assets.soundEnabled) return false;
+        if (Assets.#menuMusicStarted && !music.paused) return true;
+
+        if (!Assets.#menuMusicStarted) {
+            if (music.readyState >= HTMLMediaElement.HAVE_METADATA) {
+                music.currentTime = Assets.MENU_MUSIC_START;
+            } else {
+                music.addEventListener(
+                    "loadedmetadata",
+                    () => {
+                        // Only seek if playback hasn't moved past the start yet
+                        if (music.currentTime < Assets.MENU_MUSIC_START) {
+                            music.currentTime = Assets.MENU_MUSIC_START;
+                        }
+                    },
+                    { once: true }
+                );
+            }
+        }
+
+        try {
+            await music.play();
+            Assets.#menuMusicStarted = true;
+            return true;
+        } catch (err) {
+            console.warn("Menu music play was blocked (likely autoplay):", err);
+            return false;
+        }
     }
 }

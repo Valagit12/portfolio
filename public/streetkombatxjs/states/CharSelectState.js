@@ -1,5 +1,6 @@
 // ./states/CharSelectState.js
 import { State } from "./State.js";
+import { drawFrame } from "../gfx/SpriteSheet.js";
 import { Assets } from "../gfx/Assets.js";
 import { Animation } from "../gfx/Animation.js";
 import { StageSelectState } from "./StageSelectState.js";
@@ -139,10 +140,10 @@ export class CharSelectState extends State {
         const frame2 = this.getCurrentAnimationState_Player2();
 
         if (frame1) {
-            ctx.drawImage(frame1, 29, 161, 411, 822);
+            drawFrame(ctx, frame1, 29, 161, 411, 822);
         }
         if (frame2) {
-            ctx.drawImage(frame2, 861, 161, 411, 822);
+            drawFrame(ctx, frame2, 861, 161, 411, 822);
         }
 
         ctx.font = Assets.dragonForceNum;

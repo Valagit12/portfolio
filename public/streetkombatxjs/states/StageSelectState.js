@@ -1,5 +1,6 @@
 // ./states/StageSelectState.js
 import { State } from "./State.js";
+import { drawFrame } from "../gfx/SpriteSheet.js";
 import { Assets } from "../gfx/Assets.js";
 import { GameState } from "./GameState.js";
 import { CharSelectState } from "./CharSelectState.js";
@@ -72,20 +73,8 @@ export class StageSelectState extends State {
 
     render(ctx) {
         ctx.drawImage(this.stageSelectScreen, 0, 0, 1280, 720);
-        ctx.drawImage(
-            this.player1.getStance().getCurrentFrame(),
-            29,
-            161,
-            411,
-            822
-        );
-        ctx.drawImage(
-            this.player2.getStance().getCurrentFrame(),
-            861,
-            161,
-            411,
-            822
-        );
+        drawFrame(ctx, this.player1.getStance().getCurrentFrame(), 29, 161, 411, 822);
+        drawFrame(ctx, this.player2.getStance().getCurrentFrame(), 861, 161, 411, 822);
 
         ctx.font = Assets.dragonForceNum;
         ctx.fillStyle = "red";
