@@ -3,30 +3,404 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>StreetKombat X</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Street Kombat X</title>
+    <link rel="preload" href="./res/font/DragonForcE.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans+Condensed:wght@400;600;800&display=swap"
+        rel="stylesheet" />
     <style>
+        @font-face {
+            font-family: "DragonForcE";
+            src: url("./res/font/DragonForcE.ttf") format("truetype");
+            font-display: block;
+        }
+
+        /* Palette sampled from the Pack Studios logo (res/IntroScreen) */
+        :root {
+            --black: #000000;
+            --blood: #600000;
+            /* Same pure-red hue as the logo, lifted so small text stays readable on black (3.2:1) */
+            --blood-lit: #c00000;
+            --ember: #3c0000;
+            --char: #1f0000;
+            --bone: #efe6dc;
+            --ash: #9b7f7b;
+
+            --font-ui: "Sofia Sans Condensed", "Arial Narrow", sans-serif;
+            --font-logo: "DragonForcE", var(--font-ui);
+
+            --header-h: 60px;
+            --controls-h: 112px;
+            --gutter: 16px;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
         html,
         body {
             margin: 0;
-            padding: 0;
-            background: black;
             height: 100%;
-            width: 100%;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100dvh;
+            background: var(--black);
+            color: var(--bone);
+            font-family: var(--font-ui);
+            font-size: 17px;
+            line-height: 1.4;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--bone);
+            outline-offset: 3px;
+        }
+
+        /* ---------- Header ---------- */
+        .site-header {
+            height: var(--header-h);
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 var(--gutter);
+            width: 100%;
+            max-width: 1312px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            color: var(--ash);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: var(--bone);
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            text-decoration-color: var(--blood);
+            text-decoration-thickness: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 36px;
+            padding: 0 12px;
+            border-radius: 4px;
+            border: 1px solid var(--ember);
+            background: transparent;
+            color: var(--bone);
+            font: 600 16px var(--font-ui);
+            cursor: pointer;
+        }
+
+        .icon-btn:hover {
+            background: var(--char);
+            border-color: var(--blood);
+        }
+
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* `hidden` isn't honored on <svg> by default */
+        .icon-btn[hidden],
+        .icon-btn svg[hidden] {
+            display: none;
+        }
+
+        /* ---------- Game stage ---------- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
+            gap: 20px;
+            padding: 0 var(--gutter) var(--gutter);
+        }
+
+        .stage {
+            position: relative;
+            /* Largest 16:9 box that fits beside the header and controls */
+            width: min(1280px,
+                    calc(100vw - 2 * var(--gutter)),
+                    calc((100dvh - var(--header-h) - var(--controls-h) - 3 * var(--gutter)) * 16 / 9));
+            min-width: 288px;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            background: var(--black);
+            /* outline, not border: a border would shrink the 16:9 box and letterbox the canvas */
+            outline: 2px solid var(--blood);
+        }
+
+        /* Before the game starts, let the poster grow if it doesn't fit 16:9 (narrow phones) */
+        .stage:has(> .start-screen:not([hidden])) {
+            aspect-ratio: auto;
+        }
+
+        .stage:has(> .start-screen:not([hidden])) #gameCanvas {
+            display: none;
+        }
+
+        .stage:fullscreen {
+            outline: 0;
+            width: 100%;
+            height: 100%;
+            aspect-ratio: auto;
         }
 
         #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             image-rendering: pixelated;
-            border: 2px solid #444;
-            background: black;
+            background: var(--black);
+        }
+
+        /* ---------- Start screen: black, logo-red type and frame, poster-style ---------- */
+        .start-screen {
+            /* In flow with a 16:9 minimum; aspect-ratio lets it grow to fit its content */
+            aspect-ratio: 16 / 9;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-start;
+            padding: clamp(20px, 5%, 64px);
+            background: var(--black);
+        }
+
+        .start-screen[hidden] {
+            display: none;
+        }
+
+        .start-title {
+            margin: 0;
+            font-family: var(--font-logo);
+            font-weight: normal;
+            font-size: clamp(40px, 11.5vw, 148px);
+            line-height: 0.9;
+            color: var(--blood);
+        }
+
+        .start-btn {
+            margin-top: clamp(16px, 3vw, 36px);
+            padding: clamp(8px, 1.2vw, 14px) clamp(20px, 2.6vw, 32px);
+            border-radius: 4px;
+            border: 2px solid var(--blood);
+            background: transparent;
+            color: var(--blood-lit);
+            font: 800 clamp(18px, 2.2vw, 24px) var(--font-ui);
+            cursor: pointer;
+        }
+
+        .start-btn:hover {
+            background: var(--blood);
+            color: var(--bone);
+        }
+
+        .start-btn:active {
+            transform: translateY(1px);
+        }
+
+        .touch-note {
+            display: none;
+            margin: 12px 0 0;
+            font-weight: 600;
+            color: var(--blood-lit);
+        }
+
+        @media (pointer: coarse) {
+            .touch-note {
+                display: block;
+            }
+        }
+
+        /* ---------- Controls: one strip, columns split by rules ---------- */
+        .controls {
+            width: min(1280px, 100%);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        }
+
+        .controls section {
+            padding: 2px 20px;
+            border-left: 1px solid var(--ember);
+        }
+
+        .controls section:first-child {
+            border-left: 0;
+            padding-left: 0;
+        }
+
+        .controls h2 {
+            margin: 0 0 6px;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--bone);
+        }
+
+        .controls dl {
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+            gap: 4px 12px;
+            font-size: 16px;
+        }
+
+        .controls dl div {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .controls dt {
+            display: flex;
+            gap: 3px;
+        }
+
+        .controls dd {
+            margin: 0;
+            color: var(--ash);
+        }
+
+        kbd {
+            display: inline-block;
+            min-width: 22px;
+            padding: 0 5px;
+            border-radius: 3px;
+            border: 1px solid var(--ash);
+            border-bottom-width: 2px;
+            color: var(--bone);
+            font: 600 14px/20px var(--font-ui);
+            text-align: center;
+        }
+
+        @media (max-width: 560px) {
+            .controls section {
+                border-left: 0;
+                border-top: 1px solid var(--ember);
+                padding: 10px 0;
+            }
+
+            .controls section:first-child {
+                border-top: 0;
+                padding-top: 0;
+            }
+        }
+
+        @media (max-height: 640px) {
+            :root {
+                --controls-h: 0px;
+            }
+
+            .controls {
+                display: none;
+            }
         }
     </style>
 </head>
 
 <body>
-    <canvas id="gameCanvas" width="1280" height="720"></canvas>
+    <header class="site-header">
+        <a class="back-link" href="../">Back to portfolio</a>
+        <div class="header-actions">
+            <button class="icon-btn" id="soundToggle" type="button" aria-pressed="true">
+                <svg id="soundOnIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M11 5 6 9H2v6h4l5 4V5z" />
+                    <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+                    <path d="M19 5a10 10 0 0 1 0 14" />
+                </svg>
+                <svg id="soundOffIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                    <path d="M11 5 6 9H2v6h4l5 4V5z" />
+                    <path d="m22 9-6 6" />
+                    <path d="m16 9 6 6" />
+                </svg>
+                <span id="soundLabel">Sound on</span>
+            </button>
+            <button class="icon-btn" id="fullscreenToggle" type="button" aria-label="Fullscreen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" aria-hidden="true">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                    <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                    <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                    <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <div class="stage" id="stage">
+            <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+            <div class="start-screen" id="startScreen">
+                <h1 class="start-title">Street Kombat X</h1>
+                <button class="start-btn" id="startButton" type="button" autofocus>Start game</button>
+                <p class="touch-note">This game needs a keyboard.</p>
+            </div>
+        </div>
+
+        <div class="controls" aria-label="Controls">
+            <section>
+                <h2>Player 1</h2>
+                <dl>
+                    <div><dt><kbd>A</kbd><kbd>D</kbd></dt><dd>Move</dd></div>
+                    <div><dt><kbd>D</kbd><kbd>D</kbd></dt><dd>Dash (hold to run)</dd></div>
+                    <div><dt><kbd>A</kbd><kbd>A</kbd></dt><dd>Backdash</dd></div>
+                    <div><dt><kbd>W</kbd></dt><dd>Jump</dd></div>
+                    <div><dt><kbd>S</kbd></dt><dd>Crouch</dd></div>
+                    <div><dt><kbd>Y</kbd></dt><dd>Block</dd></div>
+                    <div><dt><kbd>E</kbd></dt><dd>Attack 1</dd></div>
+                    <div><dt><kbd>R</kbd></dt><dd>Attack 2</dd></div>
+                    <div><dt><kbd>T</kbd></dt><dd>Special</dd></div>
+                </dl>
+            </section>
+            <section>
+                <h2>Player 2</h2>
+                <dl>
+                    <div><dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Move</dd></div>
+                    <div><dt><kbd>←</kbd><kbd>←</kbd></dt><dd>Dash (hold to run)</dd></div>
+                    <div><dt><kbd>→</kbd><kbd>→</kbd></dt><dd>Backdash</dd></div>
+                    <div><dt><kbd>↑</kbd></dt><dd>Jump</dd></div>
+                    <div><dt><kbd>↓</kbd></dt><dd>Crouch</dd></div>
+                    <div><dt><kbd>M</kbd></dt><dd>Block</dd></div>
+                    <div><dt><kbd>/</kbd></dt><dd>Attack 1</dd></div>
+                    <div><dt><kbd>.</kbd></dt><dd>Attack 2</dd></div>
+                    <div><dt><kbd>,</kbd></dt><dd>Special</dd></div>
+                </dl>
+            </section>
+            <section>
+                <h2>Menus</h2>
+                <dl>
+                    <div><dt><kbd>Enter</kbd></dt><dd>Select</dd></div>
+                    <div><dt><kbd>Esc</kbd></dt><dd>Pause / back</dd></div>
+                    <div><dt><kbd>`</kbd></dt><dd>Frame data and hitboxes</dd></div>
+                </dl>
+            </section>
+        </div>
+    </main>
+
     <script type="module" src="./game.js"></script>
 </body>
 
