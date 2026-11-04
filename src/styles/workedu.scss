@@ -50,18 +50,8 @@
     overflow-wrap: anywhere;
 }
 
-#education, #experience {
-        transition: opacity 0.1s ease-in-out;
-}
-
-#education {
-    display: none;
-    opacity: 0;
-}
-
-#experience {
-    display: block;
-    opacity: 1;
+.workedu-panel {
+    transition: opacity 0.1s ease-in-out;
 }
 
 .timeline {
