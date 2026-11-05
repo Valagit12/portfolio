@@ -26,38 +26,7 @@
 .name.is-moving .nt-from,
 .name.is-moving .nt-to { visibility: hidden; }
 
-.nt-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  perspective: 700px;
-  visibility: hidden;
-}
-.name.is-moving .nt-layer { visibility: visible; }
-
-.nt-part {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform-style: preserve-3d;
-  will-change: translate, rotate;
-}
-
-.nt-face {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-.nt-back { transform: rotateY(180deg); }
-
-.nt-glyph {
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  line-height: inherit;
-}
+.name.is-moving > .nt-layer { visibility: visible; }
 
 // Tap sparks (touch only)
 .nt-spark {

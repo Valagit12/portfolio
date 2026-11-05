@@ -17,7 +17,7 @@
     min-height: 5rem
 }
 
-.tracking-item span {
+.tracking-item .tracking-sub {
     display: block;
     color: #888;
     font-size: 85%
@@ -43,6 +43,7 @@
 }
 
 .icon-image {
+    border-radius: 50%; // matches the round frame, so its plates are cut from the circle
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -50,13 +51,23 @@
     overflow-wrap: anywhere;
 }
 
-.workedu-panel {
-    transition: opacity 0.1s ease-in-out;
+// The timeline's vertical line: one line on the box, not a border per row, so when the box
+// wipes between Experience and Education (softWipe.js) the line shrinks / grows with the box
+// instead of being wiped. It sits on the right edge of each row's .timeline (35px wide), which
+// starts 1rem in (the pane's ps-3; the row's negative margin and the column's padding cancel).
+.workedu-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(1rem + 35px - 1px);
+    width: 1px;
+    background: $light;
+    pointer-events: none;
 }
 
 .timeline {
     display: flex;
-    border-right: 1px solid $light;
     justify-content: flex-end;
     align-items: center;
     height: 100%;

@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useSoftWipe } from './softWipe.js';
 import { asset } from '../asset.js';
 
 const timelines = {
@@ -37,25 +38,45 @@ const tabs = [
   { id: 'education', label: 'Education' },
 ];
 
-export default function WorkEdu() {
-  const [active, setActive] = useState('experience'); // highlighted button
-  const [shown, setShown] = useState('experience'); // panel currently rendered
-  const [visible, setVisible] = useState(true);
+function Pane({ items, className, paneRef }) {
+  return (
+    <div className={`swap-pane ps-3 ${className}`} ref={paneRef}>
+      {items.map((item) => (
+        <div className="row" key={item.title}>
+          <div className="col-2 col-md-1 col-lg-1">
+            <div className="timeline">
+              <div className="tracking-icon">
+                <img src={asset(item.logo)} alt={item.alt} className="icon-image" />
+              </div>
+            </div>
+          </div>
+          <div className="tracking-item col-10 col-md-11 col-lg-11">
+            <div className="bg-transparent">
+              {item.title}
+              {item.lines.map((line) => (
+                <span className="tracking-sub" key={line}>
+                  {line}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-  // Fade the new panel in once it has been rendered at opacity 0
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setVisible(true));
-    return () => cancelAnimationFrame(frame);
-  }, [shown]);
+// The box wipes between the two timelines (softWipe.js).
+export default function WorkEdu() {
+  const [active, setActive] = useState('experience');
+  const rootRef = useRef(null);
+  const fromRef = useRef(null);
+  const toRef = useRef(null);
+  const wipe = useSoftWipe({ rootRef, fromRef, toRef });
 
   const select = (id) => {
-    if (id === active) return;
     setActive(id);
-    setVisible(false);
-  };
-
-  const handleTransitionEnd = () => {
-    if (!visible) setShown(active);
+    wipe.set(id === 'education');
   };
 
   return (
@@ -66,6 +87,7 @@ export default function WorkEdu() {
             key={id}
             id={`${id}btn`}
             className={`btn btn-outline-light pointerall ${i === 0 ? 'me-2' : ''} ${active === id ? 'active' : ''}`}
+            aria-pressed={active === id}
             onClick={() => select(id)}
           >
             {label}
@@ -73,31 +95,9 @@ export default function WorkEdu() {
         ))}
       </div>
 
-      <div
-        id={shown}
-        className="workedu-panel mx-auto border border-light rounded-3 ps-3 pb-0 pt-0"
-        style={{ opacity: visible ? 1 : 0 }}
-        onTransitionEnd={handleTransitionEnd}
-      >
-        {timelines[shown].map((item) => (
-          <div className="row" key={item.title}>
-            <div className="col-2 col-md-1 col-lg-1">
-              <div className="timeline">
-                <div className="tracking-icon">
-                  <img src={asset(item.logo)} alt={item.alt} className="icon-image" />
-                </div>
-              </div>
-            </div>
-            <div className="tracking-item col-10 col-md-11 col-lg-11">
-              <div className="bg-transparent">
-                {item.title}
-                {item.lines.map((line) => (
-                  <span key={line}>{line}</span>
-                ))}
-              </div>
-            </div>
-          </div>
-        ))}
+      <div ref={rootRef} className="workedu-panel swap-stage mx-auto border border-light rounded-3">
+        <Pane items={timelines.experience} className="swap-from" paneRef={fromRef} />
+        <Pane items={timelines.education} className="swap-to" paneRef={toRef} />
       </div>
     </section>
   );

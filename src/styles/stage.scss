@@ -1,0 +1,27 @@
+// Two contents stacked in one grid cell, swapped by an animation:
+// Experience ↔ Education (src/components/softWipe.js) and the projects grid ↔ detail box
+// (src/components/projectMorph.js). Markup: .swap-stage > .swap-pane.swap-from + .swap-pane.swap-to
+.swap-stage {
+  position: relative;
+  display: grid;
+  align-items: start;
+}
+.swap-pane {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+// At rest only the current content is there, so the hidden one takes up no space.
+.swap-stage:not(.is-animating):not(.is-alt) > .swap-to,
+.swap-stage.is-alt:not(.is-animating) > .swap-from {
+  display: none;
+}
+
+// While animating both are laid out (the script sets the height). Once the stage starts to
+// shrink the script adds .is-clipped, so the taller content can't stretch the page past the end
+// of the background. (Only then: clipping at the stage's edge while cards still show there
+// would shave the bottom row's borders.)
+.swap-stage.is-clipped {
+  overflow: hidden;
+  overflow: clip;
+}

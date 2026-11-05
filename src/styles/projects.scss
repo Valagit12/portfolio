@@ -1,55 +1,6 @@
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 600px;
-  width: 90%;
-  position: relative;
-  list-style-position: inside;
-  max-height: 100%;
-  overflow: auto;
-}
-
-.modal-content a {
-  display: block;
-  margin-top: 10px;
-  color: $secondary;
-  text-decoration: none;
-}
-.modal-content a:hover {
-  text-decoration: underline;
-}
-.modal-content li {
-  margin-bottom: 0.5em;
-}
-
-
-.close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-
-.modal.show {
-  display: flex;
-}
-
+// The one gap between sections (header → Experience → Projects).
 .section {
-  padding-top: 3rem;
+  padding-top: 4.5rem;
 }
 .section h2 {
   padding-left: 0.5rem;
@@ -59,6 +10,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
+}
+.projects-stage {
   margin-top: 1.5rem;
 }
 .project-card {
@@ -104,6 +57,69 @@
   text-decoration: underline;
 }
 
+// Grid ↔ detail box sequence (projectMorph.js). While it runs, the cards don't lift on hover,
+// nothing is clickable, and .morph-shell draws the moving outline.
+.projects-stage.is-animating {
+  pointer-events: none;
+
+  .project-card {
+    transform: none;
+    box-shadow: none;
+  }
+  .project-card.is-picked,
+  .project-detail { border-color: transparent; }
+  .project-detail h3 { visibility: hidden; } // the card's title stands in for it
+}
+
+.morph-shell {
+  position: absolute;
+  border: 1px solid $light;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+// The big box a card turns into (Projects.jsx)
+.project-detail {
+  position: relative;
+  border: 1px solid $light;
+  border-radius: 8px;
+  padding: 1rem; // same as a card, so the title sits in the same spot (projectMorph.js)
+  color: $light;
+  overflow-wrap: anywhere;
+
+  h3 {
+    margin-bottom: 0.5rem; // same as a card
+    padding-right: 2rem; // room for the close button
+  }
+  ul {
+    padding-left: 1.25rem;
+  }
+  li {
+    margin-bottom: 0.5em;
+  }
+}
+.project-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: $light;
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.project-detail-links a {
+  display: block;
+  margin-top: 10px;
+  color: $secondary;
+  text-decoration: none;
+}
+.project-detail-links a:hover {
+  text-decoration: underline;
+}
+
 .hidden {
   display: none
 }
@@ -111,6 +127,7 @@
 #projects {
     max-width: 700px;
     min-width: 300px;
+    padding-bottom: 4.5rem; // same gap below the last section as between sections
 }
 
  #workedu {

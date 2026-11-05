@@ -1727,7 +1727,9 @@ function ft(V, _) {
       f && nt(f); // PATCH (portfolio): touches that never started on the canvas have no pointer
     }
   }), window.addEventListener("keydown", (o) => {
-    o.code === "KeyP" && (_.PAUSED = !_.PAUSED), o.key === " " && me.push(Number.parseInt(Math.random() * 20) + 5);
+    // portfolio patch: Space on a focused control presses it; don't spray splats too
+    const onControl = o.target?.closest?.('a, button, input, select, textarea, label, summary, [role="button"], [role="tab"], [contenteditable="true"]');
+    o.code === "KeyP" && !onControl && (_.PAUSED = !_.PAUSED), o.key === " " && !onControl && me.push(Number.parseInt(Math.random() * 20) + 5);
   });
   function it(o, s, a, f) {
     o.id = s, o.down = !0, o.moved = !1, o.texcoordX = a / D.width, o.texcoordY = 1 - f / D.height, o.prevTexcoordX = o.texcoordX, o.prevTexcoordY = o.texcoordY, o.deltaX = 0, o.deltaY = 0, o.color = tt();

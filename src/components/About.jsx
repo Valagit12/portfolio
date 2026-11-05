@@ -12,7 +12,7 @@ export default function About() {
   const photoRef = useRef(null); // hovering the photo transforms the name too
   return (
     <header>
-      <section className="container my-5 py-5 z-i none">
+      <section className="container mt-5 pt-5 z-i none">
         <div className="d-flex flex-column flex-md-row align-items-center justify-content-center gap-5">
           <div>
             <div
@@ -27,7 +27,7 @@ export default function About() {
               />
             </div>
 
-            <div className="text-center">
+            <div className="text-center" style={{ marginTop: '0.75rem' }}>
               <TransformingName
                 text="Valareza Arezehgar"
                 altText="Hi! I'm Vala 🙂"

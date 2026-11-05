@@ -12,12 +12,45 @@ html {
 }
 
 // Phones: Safari's bars tint from the page background, so match each half of the page to the
-// fluid's colour at that edge (both kept live by FluidBackground.jsx).
+// fluid's colour at that edge (both kept live by FluidBackground.jsx). The gradient must not
+// repeat and the fallback colour must be the bottom one: past the end of the page (the strip
+// under Safari's toolbar when scrolled all the way down) only the fallback shows, and it should
+// continue the fluid's bottom edge, not the lighter top colour.
 @media (hover: none) {
   html {
-    background: linear-gradient(to bottom, var(--clr-edge-top) 50%, var(--clr-edge-bottom) 50%);
-    background-color: var(--clr-edge-top);
+    background: linear-gradient(to bottom, var(--clr-edge-top) 50%, var(--clr-edge-bottom) 50%) no-repeat;
+    background-color: var(--clr-edge-bottom);
   }
+}
+
+// iOS 26 Safari ignores theme-color and paints both its top and bottom bars from the page's
+// background-color — unless a fixed element touches the top edge, in which case the top bar
+// takes that element's colour. This strip gives the top bar the fluid's top colour while the
+// bottom keeps the bottom colour. Safari ignores it below ~6px tall, or if it's hidden or
+// covered; it shows as a 6px extension of the top bar in the same colour.
+.top-edge {
+  display: none;
+}
+@media (hover: none) {
+  .top-edge {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    z-index: 5;
+    background-color: var(--clr-edge-top);
+    transition: background-color 0.8s linear;
+    pointer-events: none;
+  }
+}
+
+// Set for an instant by FluidBackground.jsx so the first edge colours land without fading,
+// before the loading screen opens.
+html.edges-instant,
+html.edges-instant .top-edge {
+  transition: none;
 }
 
 // No rubber-band bounce on phones: pulling past the top/bottom would drag the page away
@@ -30,8 +63,8 @@ body {
 body {
   font-family: var(--font-sans);
   color: var(--clr-text);
-  // Transparent: the fluid canvas is a direct child of <body> (z-index -100), so a body
-  // background would paint over it. The page colour lives on html.
+  // Transparent: the fluid layer sits behind the page at z-index -1, so a body background
+  // would paint over it. The page colour lives on html.
   background: transparent;
   line-height: 1.6;
   // Same text rendering in Safari, Chrome and Firefox on macOS (others ignore these).
@@ -67,19 +100,51 @@ header div {
   width: 100%;
 }
 
-#fluid {
-  background-color: black;
-  top: 0;
-  z-index: -100;
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  // Full height with the mobile address bar hidden, so the layer doesn't resize (and the sim
-  // doesn't re-init) every time the bar shows/hides on iOS/Android. Older browsers use 100%.
-  height: 100lvh;
-  // Input reaches the sim through window listeners (FluidBackground.jsx), so the canvas
-  // never needs to be hit — and it must not swallow touch scrolling.
+// The fluid sits behind the whole page in a sticky layer rather than position: fixed. iOS 26
+// Safari treats a fixed element touching the bottom edge as a fixed footer and paints a solid
+// band under its toolbar; a sticky layer lets the fluid show through the toolbar instead.
+#root {
+  position: relative; // containing block for .fluid-layer
+  display: flow-root; // keep the header's top margin inside, so the layer starts at the very top
+  // At least a screen tall, so the layer (clipped to #root) always covers the sticky box — on a
+  // short page (e.g. Education + a short project) it would otherwise end above the screen's bottom.
+  min-height: 100vh;
+  min-height: 100lvh;
+}
+
+.fluid-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  // Input reaches the sim through window listeners (FluidBackground.jsx), so the layer never
+  // needs to be hit — and it must not swallow touch scrolling.
   pointer-events: none;
+  // The canvas hangs past the sticky box (see #fluid); clip it here so that overhang never adds
+  // scroll height past the end of the page. `clip`, not `hidden`: hidden would make this a scroll
+  // container and break the sticky box inside.
+  overflow: clip;
+}
+
+.fluid-viewport {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  // Full height with the mobile address bar hidden, so the layer doesn't resize (and the sim
+  // doesn't re-init) every time the bar shows/hides on iOS/Android.
+  height: 100lvh;
+}
+
+#fluid {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  // On iOS 26, 100lvh stops partway down the floating toolbar while the page keeps drawing
+  // beneath it, so hang the canvas past the bottom to fill that strip. Overflowing a child
+  // (rather than growing the sticky box) keeps the layer from being pushed up at the page's end.
+  height: calc(100% + 160px);
+  background-color: black;
 }
 
 // Hide the page scrollbar everywhere while keeping the page scrollable.

@@ -1,0 +1,33 @@
+// The plate transformation (src/components/plates.js) — used by the name.
+
+// The plates
+.nt-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  perspective: 700px;
+  visibility: hidden;
+}
+
+.nt-part {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d; // each plate is a little cube (see plates.js)
+  will-change: translate, rotate, transform;
+}
+
+.nt-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.nt-glyph {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  line-height: inherit;
+}

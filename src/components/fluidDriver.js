@@ -130,7 +130,9 @@ function gridFor(n, aspect) {
 // Starts the sim on `canvas` and drives it from window-level input, so it works through page
 // content, on touch, and while scrolling (the canvas itself should have pointer-events: none).
 // `settings` is read live, so it can be changed while running. Returns { fluid, fill, splash }.
-// Clicks inside an element with [data-fluid-ignore] don't splash.
+// Clicks on controls (FLUID_IGNORE) don't splash.
+const FLUID_IGNORE = 'a, button, input, select, textarea, label, summary, [role="button"], [role="tab"], [data-fluid-ignore]';
+
 export function startFluid(canvas, config = FLUID_CONFIG, settings = DRIVER_SETTINGS) {
   const fluid = WebGLFluid(canvas, { ...config });
   const cfg = fluid.config; // the library's live config object
@@ -293,8 +295,10 @@ export function startFluid(canvas, config = FLUID_CONFIG, settings = DRIVER_SETT
   document.documentElement.addEventListener('pointerleave', () => pointers.delete('mouse'));
 
   // `click` (not pointerdown) so a tap splashes but starting a scroll on a phone doesn't.
+  // No splash for presses on buttons, links and other controls, or for clicks fired from the
+  // keyboard (Enter / Space on a focused control: detail 0, no real pointer position).
   window.addEventListener('click', (e) => {
-    if (e.target.closest?.('[data-fluid-ignore]')) return;
+    if (e.detail === 0 || e.target.closest?.(FLUID_IGNORE)) return;
     const p = toTex(e.clientX, e.clientY);
     splash(p.x, p.y);
   });
