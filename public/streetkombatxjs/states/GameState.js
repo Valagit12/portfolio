@@ -7,6 +7,10 @@ import { Combat } from "../collision/Combat.js";
 import { HelpState } from "./HelpState.js";
 import { MenuState } from "./MenuState.js";
 import { EndState } from "./EndState.js";
+import { Settings } from "../settings.js";
+
+// Seconds of READY / FIGHT before the round clock starts counting
+const INTRO_SECONDS = 3;
 
 // How long the result stays up after a KO or time-out before the end screen
 const END_DELAY_TICKS = 300;
@@ -54,7 +58,9 @@ export class GameState extends State {
         // "COUNTER" / "PUNISH" callouts, keyed by the attacking player
         this.banners = { 1: null, 2: null };
 
-        this.time = 93;
+        // Round length is chosen on the main menu
+        this.roundTime = Settings.roundTime;
+        this.time = this.roundTime + INTRO_SECONDS;
         this.ticks = 0;
         this.endTimer = 0;
         this.selection = 0;
@@ -74,8 +80,20 @@ export class GameState extends State {
         this.introTicks = 0;
     }
 
+    /** Someone's health ran out (the round may still be finishing a juggle). */
+    hasKO() {
+        return this.player1.getHealth() <= 0 || this.player2.getHealth() <= 0;
+    }
+
+    /**
+     * The round is over: a KO or the clock ran out. A fighter KO'd mid-juggle
+     * can still be hit until they land, so the round ends when they do.
+     */
     isOver() {
-        return this.player1.getHealth() <= 0 || this.player2.getHealth() <= 0 || this.time <= 0;
+        if (this.player1.isJuggled() || this.player2.isJuggled()) {
+            if (this.hasKO()) return false;
+        }
+        return this.hasKO() || this.time <= 0;
     }
 
     tick() {
@@ -95,8 +113,9 @@ export class GameState extends State {
             GameState.showFrameData = !GameState.showFrameData;
         }
 
-        // The clock keeps running through hitstop, as in most fighters
-        if (this.time > 0 && this.ticks === 60) {
+        // The clock keeps running through hitstop, as in most fighters, and
+        // stops at a KO (so it can't time out a juggle that's finishing)
+        if (this.time > 0 && this.ticks === 60 && !this.hasKO()) {
             this.time -= 1;
             this.ticks = 0;
         }
@@ -113,7 +132,7 @@ export class GameState extends State {
         this.player1.fxTick();
         this.player2.fxTick();
 
-        if (this.time > 90) {
+        if (this.time > this.roundTime) {
             // READY / FIGHT countdown: no input yet, but keep both fighters breathing
             this.player1.stance.tick();
             this.player2.stance.tick();
@@ -185,9 +204,9 @@ export class GameState extends State {
             this.effects.spark("block", e.x, e.y, e.dir);
             return;
         }
-        this.effects.spark(e.lethal ? "special" : e.hit.level, e.x, e.y, e.dir);
+        this.effects.spark(e.hit.level, e.x, e.y, e.dir, e.ko);
         if (e.caught) this.banners[e.attacker.playerNum] = { text: e.caught === "punish" ? "PUNISH" : "COUNTER", tick: 0 };
-        if (e.shake) this.effects.shake(e.shake, e.lethal ? 30 : 6 + e.shake);
+        if (e.shake) this.effects.shake(e.shake, 6 + e.shake);
     }
 
     // ---------- Camera ----------
@@ -230,7 +249,9 @@ export class GameState extends State {
         this.player2.drawHealth(ctx);
         ctx.font = Assets.dragonForceNum;
         ctx.fillStyle = "red";
-        ctx.fillText(String(Math.min(this.time, 90)), 615, 113);
+        ctx.textAlign = "center"; // centered between the health bars, so 3 digits fit too
+        ctx.fillText(String(Math.min(this.time, this.roundTime)), 641, 113);
+        ctx.textAlign = "start";
         ctx.restore();
 
         for (const n of [1, 2]) {
@@ -339,7 +360,7 @@ export class GameState extends State {
 
     // ---------- Round intro: READY slams in and pulses, FIGHT crashes in with a flash + shake ----------
 
-    static FIGHT_START = 120; // the clock leaves 92 after 2 s
+    static FIGHT_START = 120; // 2 s in, one second before the clock starts
     static ROUND_START = 180; // fighters get control
     static FIGHT_EXIT = 22; // ticks FIGHT lingers into the round
 

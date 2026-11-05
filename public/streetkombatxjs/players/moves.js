@@ -7,13 +7,20 @@
 // fighter holds a follow-through pose for `recovery` ticks before they can act.
 //
 // Every hit lists the sprite frames it is active on, its hitbox, and how it
-// must be guarded. Hitstun and blockstun are worked out when the hit
+// must be guarded. The ground normals stay active a few frames past the
+// strike (up to 3, never past the move's end or into the next hit of a
+// string), so they still catch a juggled opponent drifting into range. Hitstun and blockstun are worked out when the hit
 // connects, so once both fighters can act again the attacker is exactly
 // `onHit` / `onBlock` ticks ahead (positive = plus) or behind (negative =
 // minus). Hits with `knockdown: true` put the opponent on the floor instead,
 // and the advantage comes from how long they take to get up.
 //
 // Optional move fields:
+//   recoveryOnHit  recovery once the move's last hit lands (not on block or
+//            whiff). Every attack uses 0: on hit you're free the moment the
+//            swing finishes. Hitstun is set from it, so onHit advantage is
+//            unchanged; the gain is following up in juggles, where there's
+//            no hitstun.
 //   display  sprite frame to show at each timeline frame, as [animation, frame]
 //            (lets a move reuse better frames than its own sheet row has)
 //   advance  [{ frames: [from, to], px }] step forward px spread over those frames
@@ -78,22 +85,24 @@ const hit = (props) => ({ push: 12, blockPush: 12, knockdown: false, ...props })
 // connected during 1 can't connect again after chaining into 1,1.
 
 export const STRING_MOVES = {
-    standing1: { anim: "standing1", end: 9, recovery: 9, hitCount: 1, label: "1" },
-    standing11: { anim: "standing11", end: 15, recovery: 12, hitCount: 2, label: "1,1", lunge: true },
-    standing111: { anim: "standing111", end: 20, recovery: 5, hitCount: 3, label: "1,1,1", lunge: true },
+    standing1: { anim: "standing1", end: 9, recovery: 9, recoveryOnHit: 0, hitCount: 1, label: "1" },
+    standing11: { anim: "standing11", end: 15, recovery: 12, recoveryOnHit: 0, hitCount: 2, label: "1,1", lunge: true },
+    standing111: { anim: "standing111", end: 20, recovery: 5, recoveryOnHit: 0, hitCount: 3, label: "1,1,1", lunge: true },
 };
 
 // Chain windows: the next press must come by this frame
 export const CHAIN_WINDOW = { standing1: 6, standing11: 12 };
 
-// Dom's string ends in a knockdown
+// Dom's string ends in a knockdown. Its hitboxes reach down to 144, just
+// above the crouching hurtbox (145): low enough to catch a juggled opponent
+// near the floor, still high enough to whiff over a crouch.
 export const DOM_STRING = [
     // One-arm front raise: dumbbell swung up and out to head height
-    hit({ id: "s1", frames: [2, 4], box: [90, 25, 188, 115], damage: 5, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
+    hit({ id: "s1", frames: [2, 7], box: [90, 25, 188, 144], damage: 5, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
     // Overhead hammer: wind up behind the head, bring both dumbbells down in front
-    hit({ id: "s2", frames: [9, 10], box: [90, 35, 195, 140], damage: 5, level: "medium", height: HEIGHT.HIGH, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
+    hit({ id: "s2", frames: [9, 13], box: [90, 35, 195, 144], damage: 5, level: "medium", height: HEIGHT.HIGH, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
     // Overhead press thrust: knocks them down
-    hit({ id: "s3", frames: [18, 19], box: [85, 35, 205, 125], damage: 6, level: "heavy", height: HEIGHT.HIGH, push: 20, blockPush: 40, onHit: 8, onBlock: -6, knockdown: true }),
+    hit({ id: "s3", frames: [18, 20], box: [85, 35, 205, 144], damage: 6, level: "heavy", height: HEIGHT.HIGH, push: 20, blockPush: 40, onHit: 8, onBlock: -6, knockdown: true }),
 ];
 
 // Dom's sheet rows only have a hammer curl and a slow shoulder press, so his
@@ -142,39 +151,39 @@ export const DOM_MOVES = {
 export const KASAI_STRING = [
     // Rising sword slash
     // (the fire runs past the blade: see KASAI_FIRE_BLADE)
-    hit({ id: "s1", frames: [2, 4], box: [100, 40, 212, 140], damage: 5, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
+    hit({ id: "s1", frames: [2, 7], box: [100, 40, 212, 140], damage: 5, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
     // Low kick
-    hit({ id: "s2", frames: [11, 13], box: [90, 215, 200, 295], damage: 5, level: "medium", height: HEIGHT.LOW, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
+    hit({ id: "s2", frames: [11, 15], box: [90, 215, 200, 295], damage: 5, level: "medium", height: HEIGHT.LOW, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
     // Flaming low slash
-    hit({ id: "s3", frames: [16, 18], box: [90, 185, 205, 295], damage: 6, level: "heavy", height: HEIGHT.LOW, push: 60, blockPush: 40, onHit: 6, onBlock: -6 }),
+    hit({ id: "s3", frames: [16, 20], box: [90, 185, 205, 295], damage: 6, level: "heavy", height: HEIGHT.LOW, push: 60, blockPush: 40, onHit: 6, onBlock: -6 }),
 ];
 
 // ---------- Everything else ----------
 
 export const COMMON_MOVES = {
     standing2: {
-        anim: "standing2", end: 7, recovery: 10, label: "2",
-        hits: [hit({ id: "2", frames: [3, 5], box: [90, 60, 200, 200], damage: 8, level: "heavy", height: HEIGHT.OVERHEAD, push: 36, blockPush: 30, onHit: 4, onBlock: -4 })],
+        anim: "standing2", end: 7, recovery: 10, recoveryOnHit: 0, label: "2",
+        hits: [hit({ id: "2", frames: [3, 7], box: [90, 60, 200, 200], damage: 8, level: "heavy", height: HEIGHT.OVERHEAD, push: 36, blockPush: 30, onHit: 4, onBlock: -4 })],
     },
     // Fast poke that's a big risk: -15 on block, and the attacker stands up
     // during its recovery (standing hurtbox), so any normal punishes it.
     down1: {
-        anim: "down1", end: 7, recovery: 15, crouching: true, recoveryStanding: true, label: "Down 1",
-        hits: [hit({ id: "d1", frames: [3, 5], box: [100, 150, 185, 215], damage: 5, level: "light", height: HEIGHT.MID, onHit: 2, onBlock: -15 })],
+        anim: "down1", end: 7, recovery: 15, recoveryOnHit: 0, crouching: true, recoveryStanding: true, label: "Down 1",
+        hits: [hit({ id: "d1", frames: [3, 7], box: [100, 150, 185, 215], damage: 5, level: "light", height: HEIGHT.MID, onHit: 2, onBlock: -15 })],
     },
     down2: {
-        anim: "down2", end: 8, recovery: 9, crouching: true, label: "Down 2",
-        hits: [hit({ id: "d2", frames: [4, 5], box: [100, 225, 205, 295], damage: 7, level: "medium", height: HEIGHT.LOW, push: 24, blockPush: 20, onHit: 3, onBlock: -5 })],
+        anim: "down2", end: 8, recovery: 9, recoveryOnHit: 0, crouching: true, label: "Down 2",
+        hits: [hit({ id: "d2", frames: [4, 8], box: [100, 225, 205, 295], damage: 7, level: "medium", height: HEIGHT.LOW, push: 24, blockPush: 20, onHit: 3, onBlock: -5 })],
     },
     // Hands: swing overhead and bring it down in front (the strike is the
     // sheet's last frame, so it's shown on the active frames)
     jump1: {
-        anim: "jump1", end: 5, recovery: 5, air: true, label: "Jump 1",
+        anim: "jump1", end: 5, recovery: 5, recoveryOnHit: 0, air: true, label: "Jump 1",
         display: [["jump1", 0], ["jump1", 1], ["jump1", 3], ["jump1", 5], ["jump1", 5], ["jump1", 5]],
-        hits: [hit({ id: "j1", frames: [3, 4], box: [40, 30, 192, 185], damage: 5, level: "medium", height: HEIGHT.OVERHEAD, push: 16, onHit: 6, onBlock: 2 })],
+        hits: [hit({ id: "j1", frames: [3, 4], box: [40, 30, 192, 185], damage: 5, level: "medium", height: HEIGHT.OVERHEAD, push: 16, onHit: 6, onBlock: 2, launch: true })],
     },
     jump2: {
-        anim: "jump2", untilLanding: true, air: true, label: "Jump 2",
+        anim: "jump2", untilLanding: true, recoveryOnHit: 0, air: true, label: "Jump 2",
         // Kick: legs, lower body
         hits: [hit({ id: "j2", frames: [0, 0], box: [45, 175, 190, 300], damage: 7, level: "heavy", height: HEIGHT.OVERHEAD, push: 22, onHit: 8, onBlock: 3, knockdown: true })],
     },
@@ -197,20 +206,22 @@ Object.assign(DOM_MOVES, {
 // Specials: a big reward on hit (follow up freely), very punishable on block.
 // Dom steps in and claps both dumbbells together on the opponent's head.
 // Active only on frame 6 (arms together in front). Cancelled from 1,1 it
-// skips the wind-up (starts at frame 3) so it still combos.
+// skips the wind-up (starts at frame 3) so it still combos. Stuns longer
+// than Kasai's (+40): enough time to walk up and start a jump-in.
 export const DOM_SPECIAL = {
     anim: "special", end: 10, recovery: 28, recoveryFrame: 9, label: "Special",
+    recoveryOnHit: 0,
     cancelStartFrame: 3,
     advance: [{ frames: [4, 6], px: 70 }],
     fx: [{ frame: 5, type: "clash", at: [212, 48] }, { frame: 5, ...streak(55, 40, 225, 8) }],
-    hits: [hit({ id: "sp", frames: [6, 6], box: [100, 0, 245, 110], damage: 7, level: "special", height: HEIGHT.HIGH, push: 44, blockPush: 36, onHit: 22, onBlock: -14 })],
+    hits: [hit({ id: "sp", frames: [6, 6], box: [100, 0, 245, 110], damage: 7, level: "special", height: HEIGHT.HIGH, push: 44, blockPush: 36, onHit: 40, onBlock: -14 })],
 };
 
 // Active only on the downward flaming slash (frame 7), not while the sword is
 // still raised overhead. The fire reaches 110px past the blade, so the hitbox
 // does too. Small pushback so Kasai can use the +22 to follow up.
 export const KASAI_SPECIAL = {
-    anim: "special", end: 10, recovery: 28, label: "Special",
+    anim: "special", end: 10, recovery: 28, recoveryOnHit: 0, label: "Special",
     // Big burning arc from overhead down in front (fires a frame early: 6 ticks per frame)
     fx: [{ frame: 6, type: "swing", style: "fire", center: [80, 100], radius: 230, from: -100, to: 50, width: 44, life: 16 }],
     hits: [hit({ id: "sp", frames: [7, 7], box: [85, 40, 285, 290], damage: 7, level: "special", height: HEIGHT.OVERHEAD, push: 12, blockPush: 22, onHit: 22, onBlock: -12 })],
@@ -269,7 +280,7 @@ export const KASAI_MOVES = {
         end: 7,
         display: [["jump1", 1], ["jump1", 2], ["jump1", 2], ["jump1", 4], ["jump1", 5], ["jump1", 5], ["jump1", 5], ["jump1", 5]],
         fx: [fire({ frame: 2, ...vstreak(132, 0, 275, 11) })],
-        hits: [hit({ id: "j1", frames: [3, 5], box: [40, 80, 190, 240], damage: 5, level: "medium", height: HEIGHT.OVERHEAD, push: 16, onHit: 6, onBlock: 2 })],
+        hits: [hit({ id: "j1", frames: [3, 5], box: [40, 80, 190, 240], damage: 5, level: "medium", height: HEIGHT.OVERHEAD, push: 16, onHit: 6, onBlock: 2, launch: true })],
     },
     // Kick: streak along the legs
     jump2: { ...COMMON_MOVES.jump2, fx: [fire({ frame: 0, type: "swing", center: [40, 150], radius: 140, from: -10, to: 75, width: 28, life: 12 })] },
@@ -277,8 +288,8 @@ export const KASAI_MOVES = {
 
 // ---------- Knockdowns ----------
 // Launched back in an arc, lie on the floor, get up. Can't be hit at any
-// point (no juggles, no hitting them on the ground). A KO is a knockdown
-// they don't get up from.
+// point (no hitting them on the ground). A KO is a knockdown they don't get
+// up from. Juggles (below) are the one exception.
 
 export const KNOCKDOWN = {
     launchSpeed: 14, // px/tick upward at launch
@@ -286,6 +297,30 @@ export const KNOCKDOWN = {
     travel: 7, // px/tick backward while airborne
     downTicks: 34, // lying on the floor
     getupTicks: 14,
+};
+
+// ---------- Juggles ----------
+// A hit with `launch: true` (both fighters' jump 1) knocks the opponent
+// flat and floats them up instead of stunning them. While they're airborne
+// any hit keeps them up: it can't be blocked, and it pops them up again.
+// Jump 1 always pops them very high (`launch`), high enough to jump after
+// them and keep the juggle going with another jump attack. Other hits pop
+// them less each time (`relaunch`; past the end of the list, every hit uses
+// its last value). No pop goes above `ceiling`. There's no limit on hits:
+// the juggle lasts until they touch the floor. A knockdown hit (jump 2, the end of
+// Dom's string, a second special) ends the juggle early and sends them
+// down. Landing from a juggle is an ordinary knockdown: lie down, get up.
+
+export const JUGGLE = {
+    launch: 26, // px/tick upward from any jump 1 hit (~375px high, ~58 ticks in the air)
+    relaunch: [15, 13, 11, 9], // upward speed from each further hit (not jump 1); the last repeats
+    ceiling: 460, // highest a pop can carry them (px above the floor), so they stay on screen
+    gravity: 0.9, // floatier than a knockdown, so there's time to follow up
+    travel: 2.5, // px/tick away from the attacker (slow, so the 1,1,1 string reaches)
+    spin: 15, // degrees per tick tipping over to flat
+    // Extra px added on each side of a juggled fighter's hurtbox, so they're
+    // easier to keep hitting (the body box lying flat is ~240 wide, ~80 tall)
+    hurtboxPad: { x: 40, y: 50 },
 };
 
 // ---------- Dashes and running ----------

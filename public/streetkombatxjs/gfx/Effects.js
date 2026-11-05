@@ -11,6 +11,13 @@ const SPARKS = {
     special: { life: 21, rays: 15, len: 215, width: 28, layers: [["#600000", 1.08, 1.1], ["#e00000", 0.9, 0.9], ["#ffb000", 0.65, 0.7], ["#ffffff", 0.38, 0.5]], ring: 2 },
 };
 
+// Hits on a KO'd fighter: the same sparks in harsh, fully saturated reds
+// (darkest outside, no pink or white), and they last twice as long
+const KO_REDS = ["#4a0000", "#a00000", "#e00000", "#ff0000"];
+const KO_CORE = "#ff0000";
+const KO_RINGS = ["#ff0000", "#a00000"];
+const KO_LIFE = 2;
+
 export class Effects {
     constructor() {
         this.sparks = [];
@@ -52,8 +59,9 @@ export class Effects {
      * @param {number} x
      * @param {number} y
      * @param {number} dir - +1 if the attacker faces right, -1 if left
+     * @param {boolean} red - a hit on a KO'd fighter: drawn in reds
      */
-    spark(kind, x, y, dir) {
+    spark(kind, x, y, dir, red = false) {
         if (kind === "block") {
             this.sparks.push({ kind, x, y, dir, age: 0, life: 10 });
             return;
@@ -73,7 +81,7 @@ export class Effects {
                 width: spec.width * (0.7 + 0.6 * this._rand()),
             });
         }
-        this.sparks.push({ kind, x, y, dir, age: 0, life: spec.life, spec, rays });
+        this.sparks.push({ kind, x, y, dir, age: 0, life: spec.life * (red ? KO_LIFE : 1), spec, rays, red });
     }
 
     /**
@@ -179,8 +187,10 @@ export class Effects {
         const grow = t < 0.2 ? 0.8 + (t / 0.2) * 0.2 : 1 + (t - 0.2) * 0.25;
         const thin = t < 0.2 ? 1 : Math.max(0, 1 - (t - 0.2) / 0.8);
 
-        s.spec.layers.forEach(([color, lenMul, widthMul], layer) => {
-            ctx.fillStyle = color;
+        const layers = s.spec.layers;
+        layers.forEach(([color, lenMul, widthMul], layer) => {
+            // KO reds spread from darkest (outer layer) to lightest (inner)
+            ctx.fillStyle = s.red ? KO_REDS[Math.round((layer * (KO_REDS.length - 1)) / Math.max(1, layers.length - 1))] : color;
             ctx.beginPath();
             for (const r of s.rays) {
                 const len = r.len * lenMul * grow;
@@ -209,7 +219,7 @@ export class Effects {
         // Hot core
         const core = s.spec.width * 1.1 * (t < 0.3 ? 1 : Math.max(0, 1 - (t - 0.3) / 0.4));
         if (core > 0) {
-            ctx.fillStyle = "#ffffff";
+            ctx.fillStyle = s.red ? KO_CORE : "#ffffff";
             ctx.beginPath();
             ctx.arc(0, 0, core, 0, Math.PI * 2);
             ctx.fill();
@@ -221,7 +231,7 @@ export class Effects {
             const radius = s.spec.len * (0.3 + rt * 0.9);
             const lw = Math.max(0, 9 * (1 - rt * 1.4));
             if (lw <= 0) continue;
-            ctx.strokeStyle = i === 0 ? "#ffffff" : "#ff9a00";
+            ctx.strokeStyle = s.red ? KO_RINGS[i] : i === 0 ? "#ffffff" : "#ff9a00";
             ctx.lineWidth = lw;
             ctx.beginPath();
             ctx.arc(0, 0, radius, 0, Math.PI * 2);

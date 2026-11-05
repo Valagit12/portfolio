@@ -9,6 +9,7 @@ import {
     DASH,
     DOUBLE_TAP_TICKS,
     HURTBOXES,
+    JUGGLE,
     JUMP,
     KNOCKDOWN,
     LEVEL,
@@ -18,6 +19,13 @@ import {
 } from "./moves.js";
 
 const WALK_SPEED = 5; // px per tick
+
+// Hit flash length in ticks: normal, and the harsher red one on a KO'd fighter
+const FLASH_TICKS = 3;
+const KO_FLASH_TICKS = 12;
+
+// Starting health for every fighter (the health bars scale to it)
+export const MAX_HEALTH = 400;
 
 // Shared fighter logic for Dom and Kasai.
 //
@@ -43,7 +51,7 @@ export class Player {
         this.height = height;
         this.game = game;
 
-        this.health = 100;
+        this.health = MAX_HEALTH;
         this.charTitle = "";
 
         // Move state
@@ -55,6 +63,7 @@ export class Player {
         this.lastMove = null;
         this.recovery = 0;
         this.contacts = new Set(); // hit ids that connected (hit or block) this move / string
+        this.landed = new Set(); // the ones of those that hit (not blocked)
         this.firedFx = new Set(); // move effects already spawned this move / string
 
         // Being hit / blocking
@@ -157,10 +166,16 @@ export class Player {
         return this.isJumping;
     }
 
-    /** Knocked down, or in a backdash's start-up: can't be hit. */
+    /** Knocked down (unless juggled), or in a backdash's start-up: can't be hit. */
     isInvulnerable() {
-        if (this.knockdown) return true;
+        if (this.knockdown) return !this.isJuggled();
         return !!this.dash && this.dash.tick < DASH[this.dash.type].invulnerable;
+    }
+
+    /** Floating in a juggle: any hit pops them up again, until they land. */
+    isJuggled() {
+        const k = this.knockdown;
+        return !!k && k.juggle && k.phase === "air";
     }
 
     // ---------- Boxes ----------
@@ -174,6 +189,13 @@ export class Player {
 
     hurtboxes() {
         if (this.isInvulnerable()) return [];
+        // Juggled: the body box turned with the sprite (flat once they've tipped
+        // over), then padded on every side so juggles are easier to land
+        if (this.knockdown) {
+            const b = this._rotatedBox(HURTBOXES.air[0], this._pose());
+            const { x, y } = JUGGLE.hurtboxPad;
+            return [{ x0: b.x0 - x, y0: b.y0 - y, x1: b.x1 + x, y1: b.y1 + y }];
+        }
         const pose = this.isJumping ? "air" : this.isCrouching ? "crouch" : "stand";
         const boxes = HURTBOXES[pose].map((b) => this.toWorld(b));
         // An attack's limb stays hittable from its first active frame until the move ends
@@ -190,6 +212,22 @@ export class Player {
 
     hitbox(hit) {
         return this.toWorld(hit.box);
+    }
+
+    /** Local box → world rect around it after the same turn _drawRotated gives the sprite. */
+    _rotatedBox([l, t, r, b], { cx, cy, anchor, angle }) {
+        const rad = (angle * Math.PI) / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const xs = [];
+        const ys = [];
+        for (const [lx, ly] of [[l, t], [r, t], [l, b], [r, b]]) {
+            const px = (lx - this.width / 2) * this.facing;
+            const py = ly - anchor;
+            xs.push(cx + px * cos - py * sin);
+            ys.push(cy + px * sin + py * cos);
+        }
+        return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
     }
 
     /** A point in the fighter's local box (facing right) → world coordinates. */
@@ -245,13 +283,14 @@ export class Player {
     /**
      * Ticks from now until this fighter's first tick of free action, assuming
      * no new input. Combat uses it to set exact hitstun / blockstun.
+     * @param {string|null} landing - id of a hit about to land, counted as landed
      */
-    ticksUntilActionable() {
+    ticksUntilActionable(landing = null) {
         let ticks = 0;
         const m = this.moveData();
         if (m && !m.untilLanding) {
             const duration = m.end * this[m.anim].ticksPerFrame;
-            ticks = duration - this.moveTick + m.recovery;
+            ticks = duration - this.moveTick + this._recovery(m, landing);
         } else if (!m) {
             ticks = this.recovery;
         }
@@ -268,6 +307,18 @@ export class Player {
         }
         if (this.landLag) ticks = Math.max(ticks, this.landLag);
         return ticks;
+    }
+
+    /**
+     * Recovery after `m`: `recoveryOnHit` when its last hit landed (or is
+     * `landing` right now), so a move can be safer to follow up on hit
+     * while staying just as punishable on block.
+     */
+    _recovery(m, landing = null) {
+        if (m.recoveryOnHit === undefined) return m.recovery;
+        const hits = m.hitCount ? this.stringHits.slice(0, m.hitCount) : m.hits;
+        const last = hits[hits.length - 1].id;
+        return this.landed.has(last) || landing === last ? m.recoveryOnHit : m.recovery;
     }
 
     /** Ticks until the feet touch down (includes any pre-jump squat left). */
@@ -453,6 +504,8 @@ export class Player {
     }
 
     _knockDown(final, dir) {
+        // Already tipping over (hit out of a juggle): carry on from that angle
+        const rot = this.knockdown?.rot ?? 0;
         this.cancelMove();
         this.running = false;
         this.brake = 0;
@@ -465,7 +518,21 @@ export class Player {
         this.isBlocking = false;
         this.isCrouching = false;
         this.slide = 0;
-        this.knockdown = { phase: "air", tick: 0, vy: -KNOCKDOWN.launchSpeed, rot: 0, dir, final };
+        this.knockdown = { phase: "air", tick: 0, vy: -KNOCKDOWN.launchSpeed, rot, dir, final };
+    }
+
+    // Launched, or popped up again mid-juggle. A launch hit (jump 1) pops
+    // them high every time; other hits pop them less each time.
+    _juggle(dir, launcher) {
+        const hits = this.isJuggled() ? this.knockdown.hits : 0;
+        const r = JUGGLE.relaunch;
+        const pop = launcher || hits === 0 ? JUGGLE.launch : r[Math.min(hits, r.length) - 1];
+        // Only as hard as the room under the ceiling allows (v² = 2gh)
+        const room = Math.max(0, JUGGLE.ceiling - (this.yInitial - this.y));
+        const speed = Math.min(pop, Math.sqrt(2 * JUGGLE.gravity * room));
+        // KO'd mid-juggle: they stay down once they land
+        this._knockDown(this.ko, dir);
+        Object.assign(this.knockdown, { juggle: true, hits: hits + 1, vy: -speed });
     }
 
     _advanceKnockdown() {
@@ -473,10 +540,12 @@ export class Player {
         if (!k) return;
         k.tick++;
         if (k.phase === "air") {
-            this.x += k.dir * KNOCKDOWN.travel;
-            k.vy += KNOCKDOWN.gravity;
+            const arc = k.juggle ? JUGGLE : KNOCKDOWN;
+            this.x += k.dir * arc.travel;
+            k.vy += arc.gravity;
             this.y += k.vy;
-            k.rot = Math.min(85, k.rot + 7);
+            // A juggle lays them flat fast; a knockdown tips them back as they fly
+            k.rot = k.juggle ? Math.min(90, k.rot + JUGGLE.spin) : Math.max(k.rot, Math.min(85, k.rot + 7));
             if (k.vy > 0 && this.y >= this.yInitial) {
                 this.y = this.yInitial;
                 k.phase = "down";
@@ -550,7 +619,7 @@ export class Player {
         if (!m.untilLanding && i >= m.end) {
             this.lastMove = this.move;
             this.move = null;
-            this.recovery = m.recovery;
+            this.recovery = this._recovery(m);
         }
     }
 
@@ -559,6 +628,7 @@ export class Player {
         this.moveTick = startFrame * this[this.moves[key].anim].ticksPerFrame;
         this.recovery = 0;
         this.contacts.clear();
+        this.landed.clear();
         this.firedFx.clear();
     }
 
@@ -695,12 +765,19 @@ export class Player {
 
     /** @param {number} away - screen direction the hit drives this fighter */
     takeHit(hit, attackerTicks, away) {
+        const juggled = this.isJuggled();
         this.cancelMove();
         this.health -= hit.damage;
         if (this.health <= 0) this.ko = true;
-        this.flash = 3;
+        this.flash = this.ko ? KO_FLASH_TICKS : FLASH_TICKS;
         this.vibrate = LEVEL[hit.level].hitstop;
         this.vibrateAmp = LEVEL[hit.level].vibrate;
+        // Juggled (or launched) by a hit that isn't a knockdown: keep floating,
+        // even when it's the KO, so the winner can finish the combo
+        if (!hit.knockdown && (hit.launch || juggled)) {
+            this._juggle(away, hit.launch);
+            return;
+        }
         if (hit.knockdown || this.ko) {
             this._knockDown(this.ko, away);
             return;
@@ -753,7 +830,8 @@ export class Player {
             pose ? this._drawRotated(ctx, frame, pose) : this._drawSprite(ctx, frame, x, y);
         draw(img);
         if (!pose) this._drawFireBlade(ctx, x, y);
-        if (this.flash > 0) draw(this._silhouette(img, "rgba(255, 255, 255, 0.72)"));
+        // Hit flash: white, or a solid harsh red once they're KO'd
+        if (this.flash > 0) draw(this._silhouette(img, this.ko ? "rgba(255, 0, 0, 0.92)" : "rgba(255, 255, 255, 0.72)"));
     }
 
     // Flames carrying on past the sword's tip, on the frames listed in fireBlade
@@ -921,7 +999,7 @@ export class Player {
             ctx.fillText(this.charTitle, 120, 150);
 
             this._fillRoundRect(ctx, 80, 60, 450, 50, 25, 25, "red");
-            const w = (450 * health) / 100;
+            const w = (450 * health) / MAX_HEALTH;
             if (w > 0) this._fillRoundRect(ctx, 80, 60, w, 50, 25, 25, "yellow");
         } else {
             ctx.fillStyle = "black";
@@ -931,7 +1009,7 @@ export class Player {
             ctx.fillText(this.charTitle, 1080, 150);
 
             this._fillRoundRect(ctx, 750, 60, 450, 50, 25, 25, "red");
-            const w = (450 * health) / 100;
+            const w = (450 * health) / MAX_HEALTH;
             if (w > 0) this._fillRoundRect(ctx, 750 + (450 - w), 60, w, 50, 25, 25, "yellow");
         }
     }

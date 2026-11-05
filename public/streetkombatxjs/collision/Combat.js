@@ -18,6 +18,8 @@
 //     move's onHit / onBlock value. Knockdown hits floor them instead.
 //     The first special in a combo stuns as usual; a second special in the
 //     same combo knocks down, so special -> 1,1 -> special can't loop forever.
+//     Launch hits (jump 1) float the opponent instead; while they're
+//     juggled, every hit pops them up again (see JUGGLE in players/moves.js).
 //
 // tick() returns contact events; GameState turns them into hitstop,
 // sparks and screen shake.
@@ -73,7 +75,10 @@ export class Combat {
         this.tickCount++;
         const p1 = this.player1;
         const p2 = this.player2;
-        const fighting = p1.health > 0 && p2.health > 0 && time > 0;
+        // A KO mid-juggle doesn't stop the fight: the winner can keep hitting
+        // until the loser lands (the KO'd fighter can't attack back)
+        const standing = (p) => p.health > 0 || p.isJuggled();
+        const fighting = standing(p1) && standing(p2) && time > 0;
 
         // Measure first, so an exchange that started last tick counts from here
         this._measureAdvantage();
@@ -182,12 +187,14 @@ export class Combat {
         const hurt = def.hurtboxes().find((h) => overlap(hitbox, h));
         if (!hurt) return null; // may still connect on a later active frame
 
+        const outcome = this._guard(att, def, hit);
         return {
             hit,
-            outcome: this._guard(att, def, hit),
+            outcome,
             // Read before either hit is applied (a hit cancels the defender's move)
             caught: def.hitState(),
-            attackerTicks: att.ticksUntilActionable(),
+            // A move that recovers faster on hit sets hitstun from that shorter recovery
+            attackerTicks: att.ticksUntilActionable(outcome === "hit" ? hit.id : null),
             label: att.moveData().label,
             // Spark at the middle of where the boxes overlap
             x: (Math.max(hitbox.x0, hurt.x0) + Math.min(hitbox.x1, hurt.x1)) / 2,
@@ -196,7 +203,7 @@ export class Combat {
     }
 
     _guard(att, def, hit) {
-        if (def.ko || def.hitstun > 0 || def.isJumping) return "hit";
+        if (def.ko || def.hitstun > 0 || def.isJumping || def.knockdown) return "hit";
         // Guarding only covers the side you face: a cross-up from behind gets through
         const dx = att.centerX() - def.centerX();
         if (Math.abs(dx) > 4 && Math.sign(dx) !== def.facing) return "hit";
@@ -216,6 +223,7 @@ export class Combat {
 
     _apply(att, def, { hit, outcome, attackerTicks, label, x, y, caught }) {
         att.contacts.add(hit.id);
+        if (outcome === "hit") att.landed.add(hit.id);
         // Hits drive the defender away from the attacker (the attacker's facing if level)
         const away = Math.sign(def.centerX() - att.centerX()) || att.facing;
         const level = LEVEL[hit.level];
@@ -227,11 +235,11 @@ export class Combat {
             this._startMeasure(att, def, label, "block");
             return {
                 type: "block", attacker: att, defender: def, hit, ...spark,
-                hitstop: level.blockHitstop, shake: 0, lethal: false,
+                hitstop: level.blockHitstop, shake: 0, ko: false,
             };
         }
 
-        const comboing = def.hitstun > 0;
+        const comboing = def.hitstun > 0 || def.isJuggled();
         const combo = this.combos[att.playerNum];
         if (!comboing || combo.count === 0 || combo.ended) Object.assign(combo, newCombo());
 
@@ -247,15 +255,17 @@ export class Combat {
         if (special) combo.specials += 1;
         combo.pop = 8;
 
-        this._startMeasure(att, def, label, def.knockdown ? "hit (knockdown)" : "hit");
+        const juggle = def.isJuggled(); // includes a KO'd fighter the winner is still juggling
+        this._startMeasure(att, def, label, juggle ? "hit (juggle)" : def.knockdown ? "hit (knockdown)" : "hit");
 
-        const lethal = def.health <= 0;
-        const knockdown = !!def.knockdown;
+        // The launcher and knockdowns land heavy; pops mid-juggle keep the hit's own weight
+        const knockdown = !!def.knockdown && (!juggle || def.knockdown.hits === 1);
         return {
             type: "hit", attacker: att, defender: def, hit, ...spark, caught,
-            hitstop: lethal ? 26 : level.hitstop + (knockdown ? 3 : 0),
-            shake: lethal ? 16 : Math.max(level.shake, knockdown ? 8 : 0),
-            lethal,
+            hitstop: level.hitstop + (knockdown ? 3 : 0),
+            shake: Math.max(level.shake, knockdown ? 8 : 0),
+            // The KO hit and every hit after it are drawn red (same timing and shake as any hit)
+            ko: def.health <= 0,
         };
     }
 
