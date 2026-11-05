@@ -24,7 +24,7 @@
 // tick() returns contact events; GameState turns them into hitstop,
 // sparks and screen shake.
 
-import { HEIGHT, LEVEL } from "../players/moves.js";
+import { HEIGHT, LEVEL, DAMAGE_SCALING } from "../players/moves.js";
 
 // Bodies may overlap by this much (the original game's spacing)
 const BODY_OVERLAP = 30;
@@ -39,7 +39,8 @@ const PUSH_CAP = 5;
 // Attackers pushed off a cornered opponent travel at most this far
 const MAX_CORNER_PUSH = 40;
 
-const newCombo = () => ({ count: 0, damage: 0, specials: 0, pop: 0, ended: false, hold: 0 });
+// `scale` and `used`: damage scaling (DAMAGE_SCALING in players/moves.js)
+const newCombo = () => ({ count: 0, damage: 0, specials: 0, scale: 1, used: new Set(), pop: 0, ended: false, hold: 0 });
 
 const overlap = (a, b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0;
 
@@ -246,6 +247,11 @@ export class Combat {
         // A repeat special in one combo knocks down instead of stunning again
         const special = hit.level === "special";
         if (special && combo.specials > 0) hit = { ...hit, knockdown: true };
+
+        // Damage scaling: a move that already hit in this combo scales it down again
+        if (combo.used.has(hit.id)) combo.scale *= DAMAGE_SCALING.repeatScale;
+        combo.used.add(hit.id);
+        if (combo.scale !== 1) hit = { ...hit, damage: hit.damage * combo.scale };
 
         def.takeHit(hit, attackerTicks, away);
         if (!def.knockdown) this._push(att, def, hit.push, away);

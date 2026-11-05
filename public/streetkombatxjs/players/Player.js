@@ -27,7 +27,7 @@ const KO_FLASH_TICKS = 12;
 const WHOOSH = { light: "whoosh_light", medium: "whoosh_light", heavy: "whoosh_heavy", special: "whoosh_special" };
 
 // Starting health for every fighter (the health bars scale to it)
-export const MAX_HEALTH = 400;
+export const MAX_HEALTH = 1000;
 
 // Shared fighter logic for Dom and Kasai.
 //
@@ -35,6 +35,9 @@ export const MAX_HEALTH = 400;
 // Hitstun and blockstun are explicit timers set by Combat when a hit
 // connects. A fighter can act only when they have no move, recovery,
 // hitstun or blockstun, which is what makes frame advantage exact.
+/** Gravity on a juggled fighter after `hits` juggle hits: grows a little with each (gravity scaling). */
+const juggleGravity = (hits) => JUGGLE.gravity * (1 + JUGGLE.gravityGrowth * Math.max(0, hits - 1));
+
 export class Player {
     /**
      * @param {Game} game
@@ -539,7 +542,7 @@ export class Player {
         const pop = launcher || hits === 0 ? JUGGLE.launch : r[Math.min(hits, r.length) - 1];
         // Only as hard as the room under the ceiling allows (v² = 2gh)
         const room = Math.max(0, JUGGLE.ceiling - (this.yInitial - this.y));
-        const speed = Math.min(pop, Math.sqrt(2 * JUGGLE.gravity * room));
+        const speed = Math.min(pop, Math.sqrt(2 * juggleGravity(hits + 1) * room));
         // KO'd mid-juggle: they stay down once they land
         this._knockDown(this.ko, dir);
         Object.assign(this.knockdown, { juggle: true, hits: hits + 1, vy: -speed });
@@ -552,7 +555,7 @@ export class Player {
         if (k.phase === "air") {
             const arc = k.juggle ? JUGGLE : KNOCKDOWN;
             this.x += k.dir * arc.travel;
-            k.vy += arc.gravity;
+            k.vy += k.juggle ? juggleGravity(k.hits) : arc.gravity;
             this.y += k.vy;
             // A juggle lays them flat fast; a knockdown tips them back as they fly
             k.rot = k.juggle ? Math.min(90, k.rot + JUGGLE.spin) : Math.max(k.rot, Math.min(85, k.rot + 7));

@@ -44,6 +44,19 @@
 // High hitboxes all sit above the crouching hurtbox, so they also whiff
 // over a crouching opponent.
 
+// ---------- Damage ----------
+// Health is 1000 (MAX_HEALTH in Player.js). The two fighters hit differently
+// on purpose:
+//   Dom hits like a truck but gets fewer chances. His fast moves are light
+//   (jab 30, crouching punch 30); his slow, punishable ones hurt (the 2
+//   overhead 120, the clap special 130, the press that ends his string 95).
+//   Kasai's sword and fire are sharper and he lands more often: his sword
+//   moves out-damage Dom's fists (1 40, crouching thrust 45, jump-in stab
+//   70), his string leaves you standing for more pressure, and his big hits
+//   are a little smaller (2 75, special 115).
+// Repeats in a combo scale down (DAMAGE_SCALING below), so the long
+// combos and juggles cost a lot less per hit.
+
 export const HEIGHT = {
     HIGH: "high",
     MID: "mid",
@@ -98,11 +111,11 @@ export const CHAIN_WINDOW = { standing1: 6, standing11: 12 };
 // near the floor, still high enough to whiff over a crouch.
 export const DOM_STRING = [
     // One-arm front raise: dumbbell swung up and out to head height
-    hit({ id: "s1", sound: "dom_hit_light", frames: [2, 7], box: [90, 25, 188, 144], damage: 5, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
+    hit({ id: "s1", sound: "dom_hit_light", frames: [2, 7], box: [90, 25, 188, 144], damage: 30, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
     // Overhead hammer: wind up behind the head, bring both dumbbells down in front
-    hit({ id: "s2", sound: "dom_hit_medium", frames: [9, 13], box: [90, 35, 195, 144], damage: 5, level: "medium", height: HEIGHT.HIGH, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
+    hit({ id: "s2", sound: "dom_hit_medium", frames: [9, 13], box: [90, 35, 195, 144], damage: 45, level: "medium", height: HEIGHT.HIGH, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
     // Overhead press thrust: knocks them down
-    hit({ id: "s3", sound: "dom_hit_heavy", frames: [18, 20], box: [85, 35, 205, 144], damage: 6, level: "heavy", height: HEIGHT.HIGH, push: 20, blockPush: 40, onHit: 8, onBlock: -6, knockdown: true }),
+    hit({ id: "s3", sound: "dom_hit_heavy", frames: [18, 20], box: [85, 35, 205, 144], damage: 95, level: "heavy", height: HEIGHT.HIGH, push: 20, blockPush: 40, onHit: 8, onBlock: -6, knockdown: true }),
 ];
 
 // Dom's sheet rows only have a hammer curl and a slow shoulder press, so his
@@ -151,11 +164,11 @@ export const DOM_MOVES = {
 export const KASAI_STRING = [
     // Rising sword slash
     // (the fire runs past the blade: see KASAI_FIRE_BLADE)
-    hit({ id: "s1", sound: "kasai_slash", swingSound: "fire_slash", frames: [2, 7], box: [100, 40, 212, 140], damage: 5, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
+    hit({ id: "s1", sound: "kasai_slash", swingSound: "fire_slash", frames: [2, 7], box: [100, 40, 212, 140], damage: 40, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
     // Low kick
-    hit({ id: "s2", frames: [11, 15], box: [90, 215, 200, 295], damage: 5, level: "medium", height: HEIGHT.LOW, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
+    hit({ id: "s2", frames: [11, 15], box: [90, 215, 200, 295], damage: 35, level: "medium", height: HEIGHT.LOW, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
     // Flaming low stab
-    hit({ id: "s3", sound: "kasai_stab", swingSound: "fire", frames: [16, 20], box: [90, 185, 205, 295], damage: 6, level: "heavy", height: HEIGHT.LOW, push: 60, blockPush: 40, onHit: 6, onBlock: -6 }),
+    hit({ id: "s3", sound: "kasai_stab", swingSound: "fire", frames: [16, 20], box: [90, 185, 205, 295], damage: 80, level: "heavy", height: HEIGHT.LOW, push: 60, blockPush: 40, onHit: 6, onBlock: -6 }),
 ];
 
 // ---------- Everything else ----------
@@ -163,47 +176,49 @@ export const KASAI_STRING = [
 export const COMMON_MOVES = {
     standing2: {
         anim: "standing2", end: 7, recovery: 10, recoveryOnHit: 0, label: "2",
-        hits: [hit({ id: "2", frames: [3, 7], box: [90, 60, 200, 200], damage: 8, level: "heavy", height: HEIGHT.OVERHEAD, push: 36, blockPush: 30, onHit: 4, onBlock: -4 })],
+        hits: [hit({ id: "2", frames: [3, 7], box: [90, 60, 200, 200], damage: 95, level: "heavy", height: HEIGHT.OVERHEAD, push: 36, blockPush: 30, onHit: 4, onBlock: -4 })],
     },
     // Fast poke that's a big risk: -15 on block, and the attacker stands up
     // during its recovery (standing hurtbox), so any normal punishes it.
     down1: {
         anim: "down1", end: 7, recovery: 15, recoveryOnHit: 0, crouching: true, recoveryStanding: true, label: "Down 1",
-        hits: [hit({ id: "d1", frames: [3, 7], box: [100, 150, 185, 215], damage: 5, level: "light", height: HEIGHT.MID, onHit: 2, onBlock: -15 })],
+        hits: [hit({ id: "d1", frames: [3, 7], box: [100, 150, 185, 215], damage: 35, level: "light", height: HEIGHT.MID, onHit: 2, onBlock: -15 })],
     },
     down2: {
         anim: "down2", end: 8, recovery: 9, recoveryOnHit: 0, crouching: true, label: "Down 2",
-        hits: [hit({ id: "d2", frames: [4, 8], box: [100, 225, 205, 295], damage: 7, level: "medium", height: HEIGHT.LOW, push: 24, blockPush: 20, onHit: 3, onBlock: -5 })],
+        hits: [hit({ id: "d2", frames: [4, 8], box: [100, 225, 205, 295], damage: 55, level: "medium", height: HEIGHT.LOW, push: 24, blockPush: 20, onHit: 3, onBlock: -5 })],
     },
     // Hands: swing overhead and bring it down in front (the strike is the
     // sheet's last frame, so it's shown on the active frames)
     jump1: {
         anim: "jump1", end: 5, recovery: 5, recoveryOnHit: 0, air: true, label: "Jump 1",
         display: [["jump1", 0], ["jump1", 1], ["jump1", 3], ["jump1", 5], ["jump1", 5], ["jump1", 5]],
-        hits: [hit({ id: "j1", frames: [3, 4], box: [40, 30, 192, 185], damage: 5, level: "medium", height: HEIGHT.OVERHEAD, push: 16, onHit: 6, onBlock: 2, launch: true })],
+        hits: [hit({ id: "j1", frames: [3, 4], box: [40, 30, 192, 185], damage: 55, level: "medium", height: HEIGHT.OVERHEAD, push: 16, onHit: 6, onBlock: 2, launch: true })],
     },
     jump2: {
         anim: "jump2", untilLanding: true, recoveryOnHit: 0, air: true, label: "Jump 2",
         // Kick: legs, lower body
-        hits: [hit({ id: "j2", frames: [0, 0], box: [45, 175, 190, 300], damage: 7, level: "heavy", height: HEIGHT.OVERHEAD, push: 22, onHit: 8, onBlock: 3, knockdown: true })],
+        hits: [hit({ id: "j2", frames: [0, 0], box: [45, 175, 190, 300], damage: 80, level: "heavy", height: HEIGHT.OVERHEAD, push: 22, onHit: 8, onBlock: 3, knockdown: true })],
     },
 };
 
 // The same hits with their own sound (Dom's ringing iron, see audio/sfx.js)
 const withSound = (hits, sound) => hits.map((h) => ({ ...h, sound }));
+// The same hits with a character's own damage (see "Damage" at the top of this file)
+const damage = (hits, amount) => hits.map((h) => ({ ...h, damage: amount }));
 
 // Dom's streaks (and sounds) on the shared moves
 Object.assign(DOM_MOVES, {
     // Overhead chop down in front
-    standing2: { ...COMMON_MOVES.standing2, hits: withSound(COMMON_MOVES.standing2.hits, "dom_standing2"), fx: [{ frame: 2, type: "swing", center: [75, 95], radius: 112, from: -110, to: 30, width: 32, life: 8 }] },
+    standing2: { ...COMMON_MOVES.standing2, hits: damage(withSound(COMMON_MOVES.standing2.hits, "dom_standing2"), 120), fx: [{ frame: 2, type: "swing", center: [75, 95], radius: 112, from: -110, to: 30, width: 32, life: 8 }] },
     // Kneeling straight punch
-    down1: { ...COMMON_MOVES.down1, hits: withSound(COMMON_MOVES.down1.hits, "dom_down1"), fx: [{ frame: 2, ...streak(175, 45, 192, 6) }] },
+    down1: { ...COMMON_MOVES.down1, hits: damage(withSound(COMMON_MOVES.down1.hits, "dom_down1"), 30), fx: [{ frame: 2, ...streak(175, 45, 192, 6) }] },
     // Reach down to the floor in front
-    down2: { ...COMMON_MOVES.down2, fx: [{ frame: 3, type: "swing", center: [80, 150], radius: 118, from: -5, to: 75, width: 30, life: 9 }] },
+    down2: { ...COMMON_MOVES.down2, hits: damage(COMMON_MOVES.down2.hits, 65), fx: [{ frame: 3, type: "swing", center: [80, 150], radius: 118, from: -5, to: 75, width: 30, life: 9 }] },
     // Overhead swing coming down in front
-    jump1: { ...COMMON_MOVES.jump1, hits: withSound(COMMON_MOVES.jump1.hits, "dom_jump1"), fx: [{ frame: 2, type: "swing", center: [70, 105], radius: 108, from: -105, to: 35, width: 30, life: 7 }] },
+    jump1: { ...COMMON_MOVES.jump1, hits: damage(withSound(COMMON_MOVES.jump1.hits, "dom_jump1"), 45), fx: [{ frame: 2, type: "swing", center: [70, 105], radius: 108, from: -105, to: 35, width: 30, life: 7 }] },
     // Kick: streak along the legs
-    jump2: { ...COMMON_MOVES.jump2, fx: [{ frame: 0, type: "swing", center: [40, 150], radius: 140, from: 15, to: 60, width: 28, life: 10 }] },
+    jump2: { ...COMMON_MOVES.jump2, hits: damage(COMMON_MOVES.jump2.hits, 90), fx: [{ frame: 0, type: "swing", center: [40, 150], radius: 140, from: 15, to: 60, width: 28, life: 10 }] },
 });
 
 // Specials: a big reward on hit (follow up freely), very punishable on block.
@@ -217,7 +232,7 @@ export const DOM_SPECIAL = {
     cancelStartFrame: 3,
     advance: [{ frames: [4, 6], px: 70 }],
     fx: [{ frame: 5, type: "clash", at: [212, 48] }, { frame: 5, ...streak(55, 40, 225, 8) }],
-    hits: [hit({ id: "sp", frames: [6, 6], box: [100, 0, 245, 110], damage: 7, level: "special", height: HEIGHT.HIGH, push: 44, blockPush: 36, onHit: 40, onBlock: -14 })],
+    hits: [hit({ id: "sp", frames: [6, 6], box: [100, 0, 245, 110], damage: 130, level: "special", height: HEIGHT.HIGH, push: 44, blockPush: 36, onHit: 40, onBlock: -14 })],
 };
 
 // Active only on the downward flaming slash (frame 7), not while the sword is
@@ -228,7 +243,7 @@ export const KASAI_SPECIAL = {
     swingSound: "fire", // instead of the usual whoosh (see audio/sfx.js)
     // Big burning arc from overhead down in front (fires a frame early: 6 ticks per frame)
     fx: [{ frame: 6, type: "swing", style: "fire", center: [80, 100], radius: 230, from: -100, to: 50, width: 44, life: 16 }],
-    hits: [hit({ id: "sp", frames: [7, 7], box: [85, 40, 285, 290], damage: 7, level: "special", height: HEIGHT.OVERHEAD, push: 12, blockPush: 22, onHit: 22, onBlock: -12 })],
+    hits: [hit({ id: "sp", frames: [7, 7], box: [85, 40, 285, 290], damage: 115, level: "special", height: HEIGHT.OVERHEAD, push: 12, blockPush: 22, onHit: 22, onBlock: -12 })],
 };
 
 // ---------- Kasai's fire ----------
@@ -270,11 +285,11 @@ export const KASAI_MOVES = {
     standing11: { ...STRING_MOVES.standing11, fx: [risingSlash, lowKick] },
     standing111: { ...STRING_MOVES.standing111, fx: [risingSlash, lowKick, lowSlash] },
     // Front kick rising up in front
-    standing2: { ...COMMON_MOVES.standing2, fx: [fire({ frame: 2, type: "swing", center: [80, 175], radius: 105, from: 80, to: -45, width: 30, life: 11 })] },
+    standing2: { ...COMMON_MOVES.standing2, hits: damage(COMMON_MOVES.standing2.hits, 75), fx: [fire({ frame: 2, type: "swing", center: [80, 175], radius: 105, from: 80, to: -45, width: 30, life: 11 })] },
     // Kneeling sword thrust
-    down1: { ...COMMON_MOVES.down1, fx: [fire({ frame: 2, ...streak(178, 25, 225, 8) })] },
+    down1: { ...COMMON_MOVES.down1, hits: damage(COMMON_MOVES.down1.hits, 45), fx: [fire({ frame: 2, ...streak(178, 25, 225, 8) })] },
     // Low kick along the floor
-    down2: { ...COMMON_MOVES.down2, fx: [fire({ frame: 3, ...streak(266, 30, 240, 10) })] },
+    down2: { ...COMMON_MOVES.down2, hits: damage(COMMON_MOVES.down2.hits, 50), fx: [fire({ frame: 3, ...streak(266, 30, 240, 10) })] },
     // Downward stab: raise the sword, hold it, drive it straight down.
     // Same start-up as before (active from tick 9), but the stab stays on
     // screen for 9 ticks instead of flashing past, and a burning streak
@@ -284,10 +299,10 @@ export const KASAI_MOVES = {
         end: 7,
         display: [["jump1", 1], ["jump1", 2], ["jump1", 2], ["jump1", 4], ["jump1", 5], ["jump1", 5], ["jump1", 5], ["jump1", 5]],
         fx: [fire({ frame: 2, ...vstreak(132, 0, 275, 11) })],
-        hits: [hit({ id: "j1", sound: "kasai_jump1", frames: [3, 5], box: [40, 80, 190, 240], damage: 5, level: "medium", height: HEIGHT.OVERHEAD, push: 16, onHit: 6, onBlock: 2, launch: true })],
+        hits: [hit({ id: "j1", sound: "kasai_jump1", frames: [3, 5], box: [40, 80, 190, 240], damage: 70, level: "medium", height: HEIGHT.OVERHEAD, push: 16, onHit: 6, onBlock: 2, launch: true })],
     },
     // Kick: streak along the legs
-    jump2: { ...COMMON_MOVES.jump2, fx: [fire({ frame: 0, type: "swing", center: [40, 150], radius: 140, from: -10, to: 75, width: 28, life: 12 })] },
+    jump2: { ...COMMON_MOVES.jump2, hits: damage(COMMON_MOVES.jump2.hits, 70), fx: [fire({ frame: 0, type: "swing", center: [40, 150], radius: 140, from: -10, to: 75, width: 28, life: 12 })] },
 };
 
 // ---------- Knockdowns ----------
@@ -323,11 +338,26 @@ export const JUGGLE = {
     relaunch: [15, 13, 11, 9], // upward speed from each further hit (not jump 1); the last repeats
     ceiling: 460, // highest a pop can carry them (px above the floor), so they stay on screen
     gravity: 0.9, // floatier than a knockdown, so there's time to follow up
+    // Gravity scaling: each juggle hit makes them fall this much (fraction of
+    // `gravity`) faster than the last, so long juggles slowly come down.
+    // Very gentle on purpose: 10 hits in, they're only 18% heavier.
+    gravityGrowth: 0.02,
     travel: 2.5, // px/tick away from the attacker (slow, so the 1,1,1 string reaches)
     spin: 15, // degrees per tick tipping over to flat
     // Extra px added on each side of a juggled fighter's hurtbox, so they're
     // easier to keep hitting (the body box lying flat is ~240 wide, ~80 tall)
     hurtboxPad: { x: 40, y: 50 },
+};
+
+// ---------- Damage scaling ----------
+// Once a move has already hit in the current combo, hitting with it again
+// multiplies the combo's damage scale by `repeatScale`, and the scale stays
+// for the rest of the combo (every later hit deals base damage x scale).
+// Moves are told apart by their hit id, so 1, 1,1 and 1,1,1's three hits
+// are different moves; a second 1,1 repeats them.
+
+export const DAMAGE_SCALING = {
+    repeatScale: 0.8,
 };
 
 // ---------- Dashes and running ----------

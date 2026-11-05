@@ -353,9 +353,9 @@ export class GameState extends State {
             ctx.lineWidth = 5;
             ctx.lineJoin = "round";
             ctx.strokeStyle = "#000";
-            ctx.strokeText(`${c.damage} damage`, x, HUD_Y.comboDamage);
+            ctx.strokeText(`${Math.round(c.damage)} damage`, x, HUD_Y.comboDamage);
             ctx.fillStyle = "#efe6dc";
-            ctx.fillText(`${c.damage} damage`, x, HUD_Y.comboDamage);
+            ctx.fillText(`${Math.round(c.damage)} damage`, x, HUD_Y.comboDamage);
             ctx.restore();
         }
     }
