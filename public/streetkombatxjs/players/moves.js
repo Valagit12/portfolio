@@ -98,11 +98,11 @@ export const CHAIN_WINDOW = { standing1: 6, standing11: 12 };
 // near the floor, still high enough to whiff over a crouch.
 export const DOM_STRING = [
     // One-arm front raise: dumbbell swung up and out to head height
-    hit({ id: "s1", frames: [2, 7], box: [90, 25, 188, 144], damage: 5, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
+    hit({ id: "s1", sound: "dom_hit_light", frames: [2, 7], box: [90, 25, 188, 144], damage: 5, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
     // Overhead hammer: wind up behind the head, bring both dumbbells down in front
-    hit({ id: "s2", frames: [9, 13], box: [90, 35, 195, 144], damage: 5, level: "medium", height: HEIGHT.HIGH, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
+    hit({ id: "s2", sound: "dom_hit_medium", frames: [9, 13], box: [90, 35, 195, 144], damage: 5, level: "medium", height: HEIGHT.HIGH, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
     // Overhead press thrust: knocks them down
-    hit({ id: "s3", frames: [18, 20], box: [85, 35, 205, 144], damage: 6, level: "heavy", height: HEIGHT.HIGH, push: 20, blockPush: 40, onHit: 8, onBlock: -6, knockdown: true }),
+    hit({ id: "s3", sound: "dom_hit_heavy", frames: [18, 20], box: [85, 35, 205, 144], damage: 6, level: "heavy", height: HEIGHT.HIGH, push: 20, blockPush: 40, onHit: 8, onBlock: -6, knockdown: true }),
 ];
 
 // Dom's sheet rows only have a hammer curl and a slow shoulder press, so his
@@ -151,11 +151,11 @@ export const DOM_MOVES = {
 export const KASAI_STRING = [
     // Rising sword slash
     // (the fire runs past the blade: see KASAI_FIRE_BLADE)
-    hit({ id: "s1", frames: [2, 7], box: [100, 40, 212, 140], damage: 5, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
+    hit({ id: "s1", sound: "kasai_slash", swingSound: "fire_slash", frames: [2, 7], box: [100, 40, 212, 140], damage: 5, level: "light", height: HEIGHT.HIGH, push: 10, blockPush: 10, onHit: 3, onBlock: 1 }),
     // Low kick
     hit({ id: "s2", frames: [11, 15], box: [90, 215, 200, 295], damage: 5, level: "medium", height: HEIGHT.LOW, push: 14, blockPush: 16, onHit: 3, onBlock: -2 }),
-    // Flaming low slash
-    hit({ id: "s3", frames: [16, 20], box: [90, 185, 205, 295], damage: 6, level: "heavy", height: HEIGHT.LOW, push: 60, blockPush: 40, onHit: 6, onBlock: -6 }),
+    // Flaming low stab
+    hit({ id: "s3", sound: "kasai_stab", swingSound: "fire", frames: [16, 20], box: [90, 185, 205, 295], damage: 6, level: "heavy", height: HEIGHT.LOW, push: 60, blockPush: 40, onHit: 6, onBlock: -6 }),
 ];
 
 // ---------- Everything else ----------
@@ -189,16 +189,19 @@ export const COMMON_MOVES = {
     },
 };
 
-// Dom's streaks on the shared moves
+// The same hits with their own sound (Dom's ringing iron, see audio/sfx.js)
+const withSound = (hits, sound) => hits.map((h) => ({ ...h, sound }));
+
+// Dom's streaks (and sounds) on the shared moves
 Object.assign(DOM_MOVES, {
     // Overhead chop down in front
-    standing2: { ...COMMON_MOVES.standing2, fx: [{ frame: 2, type: "swing", center: [75, 95], radius: 112, from: -110, to: 30, width: 32, life: 8 }] },
+    standing2: { ...COMMON_MOVES.standing2, hits: withSound(COMMON_MOVES.standing2.hits, "dom_standing2"), fx: [{ frame: 2, type: "swing", center: [75, 95], radius: 112, from: -110, to: 30, width: 32, life: 8 }] },
     // Kneeling straight punch
-    down1: { ...COMMON_MOVES.down1, fx: [{ frame: 2, ...streak(175, 45, 192, 6) }] },
+    down1: { ...COMMON_MOVES.down1, hits: withSound(COMMON_MOVES.down1.hits, "dom_down1"), fx: [{ frame: 2, ...streak(175, 45, 192, 6) }] },
     // Reach down to the floor in front
     down2: { ...COMMON_MOVES.down2, fx: [{ frame: 3, type: "swing", center: [80, 150], radius: 118, from: -5, to: 75, width: 30, life: 9 }] },
     // Overhead swing coming down in front
-    jump1: { ...COMMON_MOVES.jump1, fx: [{ frame: 2, type: "swing", center: [70, 105], radius: 108, from: -105, to: 35, width: 30, life: 7 }] },
+    jump1: { ...COMMON_MOVES.jump1, hits: withSound(COMMON_MOVES.jump1.hits, "dom_jump1"), fx: [{ frame: 2, type: "swing", center: [70, 105], radius: 108, from: -105, to: 35, width: 30, life: 7 }] },
     // Kick: streak along the legs
     jump2: { ...COMMON_MOVES.jump2, fx: [{ frame: 0, type: "swing", center: [40, 150], radius: 140, from: 15, to: 60, width: 28, life: 10 }] },
 });
@@ -281,7 +284,7 @@ export const KASAI_MOVES = {
         end: 7,
         display: [["jump1", 1], ["jump1", 2], ["jump1", 2], ["jump1", 4], ["jump1", 5], ["jump1", 5], ["jump1", 5], ["jump1", 5]],
         fx: [fire({ frame: 2, ...vstreak(132, 0, 275, 11) })],
-        hits: [hit({ id: "j1", frames: [3, 5], box: [40, 80, 190, 240], damage: 5, level: "medium", height: HEIGHT.OVERHEAD, push: 16, onHit: 6, onBlock: 2, launch: true })],
+        hits: [hit({ id: "j1", sound: "kasai_jump1", frames: [3, 5], box: [40, 80, 190, 240], damage: 5, level: "medium", height: HEIGHT.OVERHEAD, push: 16, onHit: 6, onBlock: 2, launch: true })],
     },
     // Kick: streak along the legs
     jump2: { ...COMMON_MOVES.jump2, fx: [fire({ frame: 0, type: "swing", center: [40, 150], radius: 140, from: -10, to: 75, width: 28, life: 12 })] },
@@ -289,8 +292,9 @@ export const KASAI_MOVES = {
 
 // ---------- Knockdowns ----------
 // Launched back in an arc, lie on the floor, get up. Can't be hit at any
-// point (no hitting them on the ground). A KO is a knockdown they don't get
-// up from. Juggles (below) are the one exception.
+// point once they touch the floor (no hitting them on the ground). While
+// they're still in the air they can be juggled (below). A KO is a knockdown
+// they don't get up from.
 
 export const KNOCKDOWN = {
     launchSpeed: 14, // px/tick upward at launch
@@ -304,13 +308,15 @@ export const KNOCKDOWN = {
 // A hit with `launch: true` (both fighters' jump 1) knocks the opponent
 // flat and floats them up instead of stunning them. While they're airborne
 // any hit keeps them up: it can't be blocked, and it pops them up again.
+// The same goes for any knockdown while they're still in the air (the end of
+// Dom's string, a second special): hitting them there turns it into a juggle.
 // Jump 1 always pops them very high (`launch`), high enough to jump after
 // them and keep the juggle going with another jump attack. Other hits pop
 // them less each time (`relaunch`; past the end of the list, every hit uses
 // its last value). No pop goes above `ceiling`. There's no limit on hits:
 // the juggle lasts until they touch the floor. A knockdown hit (jump 2, the end of
-// Dom's string, a second special) ends the juggle early and sends them
-// down. Landing from a juggle is an ordinary knockdown: lie down, get up.
+// Dom's string, a second special) drops them in a faster knockdown arc, but
+// they can still be hit until they land. Landing is an ordinary knockdown: lie down, get up.
 
 export const JUGGLE = {
     launch: 26, // px/tick upward from any jump 1 hit (~375px high, ~58 ticks in the air)

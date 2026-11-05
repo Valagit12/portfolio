@@ -54,6 +54,10 @@ export class KeyManager {
         this.lastPressAt = new Map(); // code -> tick of its latest press (used or not)
         this.prevPressAt = new Map(); // code -> tick of the press before that (double taps)
         this.tickCount = 0;
+        // Players whose fighter is driven by the CPU (players/Cpu.js). Their
+        // actions use virtual keys instead of the keyboard; menus still read
+        // the keyboard.
+        this.cpu = new Set();
 
         // Per-tick snapshot used by the menus
         this.player1_jump = false;
@@ -112,18 +116,18 @@ export class KeyManager {
 
     /** Is this player's action key down (or tapped since the last tick)? */
     isHeld(playerNum, action) {
-        const code = BINDINGS[playerNum][action];
+        const code = this.code(playerNum, action);
         return this.held.has(code) || this.tapped.has(code);
     }
 
     /** Was this action freshly pressed within the buffer window and not used yet? */
     hasPress(playerNum, action) {
-        return this.pressedAt.has(BINDINGS[playerNum][action]);
+        return this.pressedAt.has(this.code(playerNum, action));
     }
 
     /** Use up a buffered press so it can only trigger one move. */
     consumePress(playerNum, action) {
-        return this.pressedAt.delete(BINDINGS[playerNum][action]);
+        return this.pressedAt.delete(this.code(playerNum, action));
     }
 
     /**
@@ -131,7 +135,7 @@ export class KeyManager {
      * `window` ticks of the previous press of the same key?
      */
     hasDoubleTap(playerNum, action, window) {
-        const code = BINDINGS[playerNum][action];
+        const code = this.code(playerNum, action);
         if (!this.pressedAt.has(code) || !this.prevPressAt.has(code)) return false;
         return this.lastPressAt.get(code) - this.prevPressAt.get(code) <= window;
     }
@@ -150,7 +154,30 @@ export class KeyManager {
 
     /** Drop all buffered presses for a player (e.g. when a round starts). */
     clearPresses(playerNum) {
-        for (const code of Object.values(BINDINGS[playerNum])) this.pressedAt.delete(code);
+        for (const action of Object.keys(BINDINGS[playerNum])) this.pressedAt.delete(this.code(playerNum, action));
+    }
+
+    // ---- CPU-controlled fighters ----
+
+    /** The key a fighter action reads: the keyboard binding, or a virtual key for a CPU player. */
+    code(playerNum, action) {
+        return this.cpu.has(playerNum) ? `CPU${playerNum}:${action}` : BINDINGS[playerNum][action];
+    }
+
+    /** Hand a player's fighter to the CPU (or back to the keyboard). */
+    setCpu(playerNum, on) {
+        for (const action of Object.keys(BINDINGS[playerNum])) this.cpuUp(playerNum, action);
+        if (on) this.cpu.add(playerNum);
+        else this.cpu.delete(playerNum);
+    }
+
+    /** The CPU pressing an action: exactly like a key going down. */
+    cpuDown(playerNum, action) {
+        this.onKeyDown({ code: `CPU${playerNum}:${action}` });
+    }
+
+    cpuUp(playerNum, action) {
+        this.held.delete(`CPU${playerNum}:${action}`);
     }
 
     // ---- DOM wiring ----

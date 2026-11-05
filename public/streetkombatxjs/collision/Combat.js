@@ -255,11 +255,12 @@ export class Combat {
         if (special) combo.specials += 1;
         combo.pop = 8;
 
-        const juggle = def.isJuggled(); // includes a KO'd fighter the winner is still juggling
-        this._startMeasure(att, def, label, juggle ? "hit (juggle)" : def.knockdown ? "hit (knockdown)" : "hit");
+        const k = def.knockdown;
+        const juggle = !!k?.juggle; // floating (includes a KO'd fighter the winner is still juggling)
+        this._startMeasure(att, def, label, juggle ? "hit (juggle)" : k ? "hit (knockdown)" : "hit");
 
         // The launcher and knockdowns land heavy; pops mid-juggle keep the hit's own weight
-        const knockdown = !!def.knockdown && (!juggle || def.knockdown.hits === 1);
+        const knockdown = !!k && (!juggle || k.hits === 1);
         return {
             type: "hit", attacker: att, defender: def, hit, ...spark, caught,
             hitstop: level.hitstop + (knockdown ? 3 : 0),

@@ -3,8 +3,12 @@
 export class State {
     static currentState = null;
 
+    // Called with the new state on every change (game.js switches the music)
+    static onChange = null;
+
     static setState(state) {
         State.currentState = state;
+        State.onChange?.(state);
     }
 
     static getState() {

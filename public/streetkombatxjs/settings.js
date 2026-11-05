@@ -4,6 +4,7 @@
 // storage is available; otherwise they just last for the session.
 
 const STORAGE_KEY = "streetkombatx.roundTime";
+const CPU_KEY = "streetkombatx.cpu";
 
 // Seconds on the round clock, cycled with left/right on the menu
 export const ROUND_TIMES = [30, 60, 90, 120, 180, 240, 300];
@@ -19,8 +20,27 @@ function loadRoundTime() {
     return DEFAULT_ROUND_TIME;
 }
 
+function loadCpu() {
+    try {
+        return localStorage.getItem(CPU_KEY) === "on";
+    } catch {
+        return false;
+    }
+}
+
 export const Settings = {
     roundTime: loadRoundTime(),
+    // Player 2 is the computer (players/Cpu.js)
+    cpu: loadCpu(),
+
+    toggleCpu() {
+        Settings.cpu = !Settings.cpu;
+        try {
+            localStorage.setItem(CPU_KEY, Settings.cpu ? "on" : "off");
+        } catch {
+            // not remembered, but still used this session
+        }
+    },
 
     /**
      * Step the round time up (+1) or down (-1) through ROUND_TIMES.

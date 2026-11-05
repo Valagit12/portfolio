@@ -6,6 +6,7 @@ import { KeyManager } from "./input/KeyManager.js";
 import { Assets } from "./gfx/Assets.js";
 import { ImageLoader } from "./gfx/ImageLoader.js";
 import { Sound } from "./audio/Sound.js";
+import { Music } from "./audio/Music.js";
 
 const WIDTH = 1280;
 const HEIGHT = 720;
@@ -108,6 +109,8 @@ class Game {
         const resumeMusic = async () => {
             // If the player chose "muted", the sound toggle starts music later
             if (!Assets.soundEnabled) return stopListening();
+            // A fight's YouTube track has taken over by then: nothing to resume here
+            if (Music.mode !== "menu") return stopListening();
             if (await Assets.playMenuMusic()) stopListening();
         };
         gestureEvents.forEach((type) => window.addEventListener(type, resumeMusic));
@@ -189,6 +192,15 @@ document.addEventListener("visibilitychange", () => {
 // ---------- Page chrome: start screen, sound toggle, fullscreen ----------
 
 const startScreen = document.getElementById("startScreen");
+
+// Fights stream their music from YouTube (see audio/Music.js); menus keep the menu track
+Music.init({
+    title: document.getElementById("musicTitle"),
+    from: document.getElementById("musicFrom"),
+    next: document.getElementById("musicNext"),
+    slot: document.getElementById("musicPlayer"),
+});
+State.onChange = (state) => Music.setMode(state.constructor.music ?? "menu");
 const soundToggle = document.getElementById("soundToggle");
 const fullscreenToggle = document.getElementById("fullscreenToggle");
 const stage = document.getElementById("stage");
@@ -230,7 +242,7 @@ startButton.addEventListener("click", async () => {
 });
 
 soundToggle.addEventListener("click", () => {
-    Assets.setSoundEnabled(!Assets.soundEnabled);
+    Music.setSoundEnabled(!Assets.soundEnabled);
     updateSoundToggle();
     releaseFocus(soundToggle);
 });

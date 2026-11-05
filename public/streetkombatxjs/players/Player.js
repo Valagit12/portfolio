@@ -174,10 +174,10 @@ export class Player {
         return !!this.dash && this.dash.tick < DASH[this.dash.type].invulnerable;
     }
 
-    /** Floating in a juggle: any hit pops them up again, until they land. */
+    /** Airborne in any knockdown (launched, popped or knocked down): any hit pops them up again, until they land. */
     isJuggled() {
         const k = this.knockdown;
-        return !!k && k.juggle && k.phase === "air";
+        return !!k && k.phase === "air";
     }
 
     // ---------- Boxes ----------
@@ -512,8 +512,10 @@ export class Player {
     }
 
     _knockDown(final, dir) {
-        // Already tipping over (hit out of a juggle): carry on from that angle
+        // Already tipping over (hit out of a juggle): carry on from that angle,
+        // and keep counting the juggle's hits so the next pop stays small
         const rot = this.knockdown?.rot ?? 0;
+        const hits = (this.isJuggled() ? this.knockdown.hits : 0) + 1;
         this.cancelMove();
         this.running = false;
         this.brake = 0;
@@ -526,7 +528,7 @@ export class Player {
         this.isBlocking = false;
         this.isCrouching = false;
         this.slide = 0;
-        this.knockdown = { phase: "air", tick: 0, vy: -KNOCKDOWN.launchSpeed, rot, dir, final };
+        this.knockdown = { phase: "air", tick: 0, vy: -KNOCKDOWN.launchSpeed, rot, dir, final, hits };
     }
 
     // Launched, or popped up again mid-juggle. A launch hit (jump 1) pops
@@ -620,12 +622,12 @@ export class Player {
             if (i >= a.frames[0] && i <= a.frames[1]) this.x += (this.forwardDir() * a.px) / ((a.frames[1] - a.frames[0] + 1) * tpf);
         }
         // A swing whoosh on the frame before each hit comes out
-        // (or the move's own `swingSound`)
+        // (or the hit's or move's own `swingSound`)
         for (const h of this.hitsFor(this.move)) {
             const key = `whoosh@${h.id}`;
             if (i >= h.frames[0] - 1 && !this.firedFx.has(key)) {
                 this.firedFx.add(key);
-                this._sound(m.swingSound ?? WHOOSH[h.level], { pitch: h.level === "medium" ? -3 : 0 });
+                this._sound(h.swingSound ?? m.swingSound ?? WHOOSH[h.level], { pitch: h.level === "medium" ? -3 : 0 });
             }
         }
         // Effects tied to a frame of the move (once per move / string)

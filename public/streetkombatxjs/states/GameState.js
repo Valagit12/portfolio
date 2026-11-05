@@ -9,6 +9,7 @@ import { MenuState } from "./MenuState.js";
 import { EndState } from "./EndState.js";
 import { Settings } from "../settings.js";
 import { Sound } from "../audio/Sound.js";
+import { Cpu } from "../players/Cpu.js";
 
 // Seconds of READY / FIGHT before the round clock starts counting
 const INTRO_SECONDS = 3;
@@ -36,6 +37,8 @@ const BANNER_TICKS = 60;
 const HUD_Y = { banner: 210, comboCount: 290, comboHits: 362, comboDamage: 406 };
 
 export class GameState extends State {
+    static music = "fight"; // see audio/Music.js
+
     // Frame-advantage readout and hitbox view, toggled with ` and remembered between matches
     static showFrameData = false;
 
@@ -62,6 +65,11 @@ export class GameState extends State {
 
         // "COUNTER" / "PUNISH" callouts, keyed by the attacking player
         this.banners = { 1: null, 2: null };
+
+        // Player 2 is the computer when the menu's CPU setting is on
+        const km = game.getKeyManager();
+        km.setCpu(2, Settings.cpu);
+        this.cpu = Settings.cpu ? new Cpu(km, this.player2, this.player1) : null;
 
         // Round length is chosen on the main menu
         this.roundTime = Settings.roundTime;
@@ -153,6 +161,7 @@ export class GameState extends State {
             this.hitstop--;
             km.extendPresses(1);
         } else {
+            this.cpu?.tick(!this.isOver());
             this.player1.tick();
             this.player2.tick();
             for (const event of this.combat.tick(this.time)) this.onContact(event);
@@ -222,7 +231,7 @@ export class GameState extends State {
             return;
         }
         this.effects.spark(e.hit.level, e.x, e.y, e.dir, e.ko);
-        Sound.play(`hit_${e.hit.level}`, { pan });
+        Sound.play(e.hit.sound ?? `hit_${e.hit.level}`, { pan }); // a move can bring its own (Dom's string)
         if (e.ko && !this.koSounded) {
             // The finishing blow (later hits on a juggled loser just hit)
             this.koSounded = true;

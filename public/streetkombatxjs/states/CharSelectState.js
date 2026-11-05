@@ -1,6 +1,7 @@
 // ./states/CharSelectState.js
 import { State } from "./State.js";
 import { Sound } from "../audio/Sound.js";
+import { Settings } from "../settings.js";
 import { drawFrame } from "../gfx/SpriteSheet.js";
 import { Assets } from "../gfx/Assets.js";
 import { Animation } from "../gfx/Animation.js";
@@ -155,6 +156,11 @@ export class CharSelectState extends State {
         ctx.fillStyle = "red";
         ctx.fillText(this.getCharTitle_Player1(), 77, 81);
         ctx.fillText(this.getCharTitle_Player2(), 1020, 81);
+        // Player 2 is the computer (menu setting)
+        if (Settings.cpu) {
+            ctx.font = Assets.dragonForce;
+            ctx.fillText("CPU", 1020, 130);
+        }
     }
 
     cursorKey() {

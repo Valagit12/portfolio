@@ -9,6 +9,8 @@ import { Dom } from "../players/Dom.js";
 import { Kasai } from "../players/Kasai.js";
 
 export class EndState extends State {
+    static music = "fight"; // see audio/Music.js
+
     constructor(game, player1, player2, stage) {
         super(game);
 
