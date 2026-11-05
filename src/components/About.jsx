@@ -1,4 +1,6 @@
+import { useRef } from 'react';
 import { asset } from '../asset.js';
+import TransformingName from './TransformingName.jsx';
 
 const socials = [
   { href: 'mailto:valareza.arezehgar@gmail.com', icon: 'bi-envelope-fill', label: 'Email' },
@@ -7,13 +9,15 @@ const socials = [
 ];
 
 export default function About() {
+  const photoRef = useRef(null); // hovering the photo transforms the name too
   return (
     <header>
       <section className="container my-5 py-5 z-i none">
         <div className="d-flex flex-column flex-md-row align-items-center justify-content-center gap-5">
           <div>
             <div
-              className="rounded-circle overflow-hidden bg-secondary mx-auto align-items-center"
+              ref={photoRef}
+              className="rounded-circle overflow-hidden bg-secondary mx-auto align-items-center pointerall"
               style={{ width: 200, height: 200 }}
             >
               <img
@@ -24,12 +28,16 @@ export default function About() {
             </div>
 
             <div className="text-center">
-              <h1 className="name text-secondary display-4 mb-2 pointerall">
-                <span className="replacement">Hi! I'm Vala 🙂</span>
-                <span className="original">Valareza Arezehgar</span>
-              </h1>
+              <TransformingName
+                text="Valareza Arezehgar"
+                altText="Hi! I'm Vala 🙂"
+                className="text-secondary display-4 mb-2 pointerall"
+                triggerRef={photoRef}
+              />
 
-              <p className="text-light fs-5 mb-3">📍 Toronto, Canada</p>
+              <p className="text-light fs-5 mb-3">
+                <i className="bi bi-geo-alt-fill text-secondary me-1"></i>Toronto, Canada
+              </p>
 
               <div className="d-flex justify-content-center gap-3 fs-4 mb-3">
                 {socials.map(({ href, icon, label }) => (

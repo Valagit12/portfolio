@@ -1,5 +1,6 @@
 // ./states/StageSelectState.js
 import { State } from "./State.js";
+import { Sound } from "../audio/Sound.js";
 import { drawFrame } from "../gfx/SpriteSheet.js";
 import { Assets } from "../gfx/Assets.js";
 import { GameState } from "./GameState.js";
@@ -44,6 +45,7 @@ export class StageSelectState extends State {
         this.enter = km.isEnter();
         this.escape = km.isEscape();
 
+        const before = `${this.stageSelectionHorizontal},${this.stageSelectionVertical}`;
         if (this.right && this.stageSelectionHorizontal === 0) {
             this.stageSelectionHorizontal += 1;
         } else if (
@@ -61,6 +63,8 @@ export class StageSelectState extends State {
         ) {
             this.stageSelectionVertical += 1;
         }
+
+        if (`${this.stageSelectionHorizontal},${this.stageSelectionVertical}` !== before) Sound.play("menu_move");
 
         this.xPlayer = this.stageSelectionHorizontal === 0 ? 466 : 647;
         this.yPlayer = this.stageSelectionVertical === 0 ? 234 : 344;
@@ -128,12 +132,14 @@ export class StageSelectState extends State {
                 this.stage = Assets.kingdom;
             }
 
+            Sound.play("menu_select");
             State.setState(
                 new GameState(this.game, this.player1, this.player2, this.stage)
             );
         }
 
         if (this.escape && !this.previousEscape) {
+            Sound.play("menu_back");
             State.setState(new CharSelectState(this.game));
         }
     }

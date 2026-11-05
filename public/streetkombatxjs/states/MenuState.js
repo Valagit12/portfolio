@@ -4,6 +4,7 @@ import { Assets } from "../gfx/Assets.js";
 import { CharSelectState } from "./CharSelectState.js";
 import { HelpState } from "./HelpState.js";
 import { Settings, ROUND_TIMES } from "../settings.js";
+import { Sound } from "../audio/Sound.js";
 
 // The third row is the round timer, drawn over the menu art (which has an
 // empty slot there). Positions are in canvas pixels; the art is 1920x1080
@@ -44,6 +45,7 @@ export class MenuState extends State {
         this.right = km.isPlayer2_right();
         this.enter = km.isEnter();
 
+        const before = `${this.selection}/${Settings.roundTime}`;
         if (this.selection < 2 && this.down && !this.previousDown) {
             this.selection += 1;
         } else if (this.selection > 0 && this.up && !this.previousUp) {
@@ -57,6 +59,7 @@ export class MenuState extends State {
         }
 
         if (this.enter && !this.previousEnter) {
+            Sound.play(this.selection === 2 ? "menu_move" : "menu_select");
             if (this.selection === 0) {
                 State.setState(new CharSelectState(this.game));
             } else if (this.selection === 1) {
@@ -65,6 +68,8 @@ export class MenuState extends State {
                 Settings.stepRoundTime(1, true); // Enter cycles through the times too
             }
         }
+
+        if (!(this.enter && !this.previousEnter) && `${this.selection}/${Settings.roundTime}` !== before) Sound.play("menu_move");
 
         this.previousUp = this.up;
         this.previousDown = this.down;

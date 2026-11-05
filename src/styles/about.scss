@@ -1,36 +1,79 @@
+// Name: mechanical transformation between two lines (src/components/TransformingName.jsx)
 .name {
   position: relative;
   display: inline-block;
-  overflow: hidden;
   white-space: nowrap;
   cursor: default;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.name .original {
-  position: relative;
-  z-index: 2;
-  transform: translateX(0);
-  opacity: 1;
-  transition: transform 0.8s ease, opacity 0.8s ease;
-  padding-left: 1rem;
+.nt-line {
+  display: inline-block;
 }
 
-.name .replacement {
+.nt-to {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  visibility: hidden;
+}
+
+// At rest the real text shows; while transforming only the plates show.
+.name.is-alt .nt-from { visibility: hidden; }
+.name.is-alt .nt-to { visibility: visible; }
+.name.is-moving .nt-from,
+.name.is-moving .nt-to { visibility: hidden; }
+
+.nt-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  perspective: 700px;
+  visibility: hidden;
+}
+.name.is-moving .nt-layer { visibility: visible; }
+
+.nt-part {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 1;
-  transform: translateX(-100%);
-  opacity: 0;
-  transition: transform 0.8s ease, opacity 0.8s ease;
+  transform-style: preserve-3d;
+  will-change: translate, rotate;
 }
 
-.name:hover .original {
-  transform: translateX(100%);
-  opacity: 0;
+.nt-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
-.name:hover .replacement {
-  transform: translateX(0);
-  opacity: 1;
+.nt-back { transform: rotateY(180deg); }
+
+.nt-glyph {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  line-height: inherit;
 }
+
+// Tap sparks (touch only)
+.nt-spark {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 6px rgba(74, 144, 226, 0.8);
+  z-index: 3;
+}
+
+// Reduced motion: a plain crossfade.
+.name.is-reduced .nt-from,
+.name.is-reduced .nt-to {
+  visibility: visible;
+  transition: opacity 0.3s ease;
+}
+.name.is-reduced .nt-to { opacity: 0; }
+.name.is-reduced.is-alt .nt-from { opacity: 0; }
+.name.is-reduced.is-alt .nt-to { opacity: 1; }

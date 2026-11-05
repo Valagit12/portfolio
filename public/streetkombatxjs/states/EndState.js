@@ -1,5 +1,6 @@
 // ./states/EndState.js
 import { State } from "./State.js";
+import { Sound } from "../audio/Sound.js";
 import { Assets } from "../gfx/Assets.js";
 import { GameState } from "./GameState.js";
 import { CharSelectState } from "./CharSelectState.js";
@@ -43,11 +44,14 @@ export class EndState extends State {
 
         if (this.selection < 2 && this.down && !this.previousDown) {
             this.selection += 1;
+            Sound.play("menu_move");
         } else if (this.selection > 0 && this.up && !this.previousUp) {
             this.selection -= 1;
+            Sound.play("menu_move");
         }
 
         if (this.enter) {
+            Sound.play("menu_select");
             if (this.selection === 0) {
                 State.setState(
                     new GameState(this.game, this.player1, this.player2, this.stage)

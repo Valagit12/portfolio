@@ -1,5 +1,6 @@
 // ./states/HelpState.js
 import { State } from "./State.js";
+import { Sound } from "../audio/Sound.js";
 import { Assets } from "../gfx/Assets.js";
 
 export class HelpState extends State {
@@ -31,11 +32,14 @@ export class HelpState extends State {
 
         if (this.pagelvl < 4 && this.right && !this.previousRight) {
             this.pagelvl += 1;
+            Sound.play("menu_move");
         } else if (this.pagelvl > 0 && this.left && !this.previousLeft) {
             this.pagelvl -= 1;
+            Sound.play("menu_move");
         }
 
         if (this.escape) {
+            Sound.play("menu_back");
             State.setState(this.previousState);
         }
 

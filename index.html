@@ -1,12 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="loading">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Dark browser UI and form controls everywhere (address bar tint on mobile Safari/Chrome) -->
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#14263c" />
     <title>Valareza Arezehgar – Portfolio</title>
     <link rel="preload" as="image" href="%BASE_URL%img/headshot.webp" fetchpriority="high" />
+    <!-- Loading screen ("ripple"): inline so it's on the very first paint, before any JS/CSS
+         arrives. A blue drop pulses and sends out rings; once the font, headshot and fluid are
+         ready, src/main.jsx adds .done and a hole opens from the drop to reveal the site. -->
+    <style>
+      html { background: #000; }
+      /* The site stays hidden (not just covered) until the loader opens, so nothing can ever
+         show through or above it. src/main.jsx drops the class as the reveal starts. */
+      html.loading #root { visibility: hidden; }
+      /* Registered so the hole's radius can animate (falls back to a jump + fade elsewhere). */
+      @property --hole { syntax: '<length>'; inherits: false; initial-value: 0px; }
+      #loader {
+        --ink: #4a90e2;
+        position: fixed; inset: 0; z-index: 2147483647;
+        background: #000;
+        overflow: hidden;
+        -webkit-mask: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 1px));
+        mask: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 1px));
+      }
+      #loader .drop, #loader .ring {
+        position: absolute; left: 50%; top: 50%;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+      }
+      #loader .drop {
+        width: 10px; height: 10px;
+        background: var(--ink);
+        box-shadow: 0 0 18px 4px rgba(74, 144, 226, 0.55);
+        animation: loader-beat 2.4s ease-in-out infinite;
+      }
+      /* Rings grow in size (not scale) so their 1px line stays a hairline. */
+      #loader .ring {
+        width: 10px; height: 10px;
+        border: 1px solid rgba(74, 144, 226, 0.7);
+        opacity: 0;
+        animation: loader-ripple 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+      }
+      #loader .ring:nth-child(3) { animation-delay: 0.8s; }
+      #loader .ring:nth-child(4) { animation-delay: 1.6s; }
+      @keyframes loader-beat {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); }
+        12% { transform: translate(-50%, -50%) scale(0.7); }
+        30% { transform: translate(-50%, -50%) scale(1.15); }
+      }
+      @keyframes loader-ripple {
+        0% { width: 10px; height: 10px; opacity: 0.8; }
+        100% { width: 240px; height: 240px; opacity: 0; }
+      }
+      /* Reveal: the hole opens from the drop to past the screen corners. The late opacity fade
+         also covers browsers that can't animate --hole. */
+      #loader.done { pointer-events: none; animation: loader-open 1.1s cubic-bezier(0.7, 0, 0.2, 1) forwards; }
+      #loader.done .drop, #loader.done .ring { animation: none; opacity: 0; transition: opacity 0.3s; }
+      @keyframes loader-open {
+        70% { opacity: 1; }
+        to { --hole: 150vmax; opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #loader .drop, #loader .ring { animation: none; }
+        #loader.done { animation: loader-fade 0.5s ease forwards; }
+        @keyframes loader-fade { to { opacity: 0; } }
+      }
+    </style>
+    <noscript><style>#loader { display: none; }</style></noscript>
   </head>
   <body>
+    <div id="loader" role="status" aria-label="Loading Valareza Arezehgar’s portfolio">
+      <div class="drop"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

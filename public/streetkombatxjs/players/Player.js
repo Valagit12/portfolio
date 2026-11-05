@@ -23,6 +23,8 @@ const WALK_SPEED = 5; // px per tick
 // Hit flash length in ticks: normal, and the harsher red one on a KO'd fighter
 const FLASH_TICKS = 3;
 const KO_FLASH_TICKS = 12;
+// Swing sound for each strength of hit
+const WHOOSH = { light: "whoosh_light", medium: "whoosh_light", heavy: "whoosh_heavy", special: "whoosh_special" };
 
 // Starting health for every fighter (the health bars scale to it)
 export const MAX_HEALTH = 400;
@@ -438,6 +440,7 @@ export class Player {
         if (!type) return;
         const dir = type === "forward" ? this.forwardDir() : -this.forwardDir();
         this.dash = { type, dir, tick: 0 };
+        this._sound("dash");
         // Dust kicks up behind the push-off foot
         this.fxEvents.push({ type: "dust", x: this.x + this.width / 2 - dir * 45, y: this.y + this.height - 6, dir: -dir, size: 1 });
     }
@@ -499,6 +502,11 @@ export class Player {
         }
     }
 
+    /** Ask GameState to play a sound from where this fighter stands. */
+    _sound(name, opts = {}) {
+        this.fxEvents.push({ type: "sound", name, x: this.centerX(), ...opts });
+    }
+
     _dust(dir, behind, size) {
         this.fxEvents.push({ type: "dust", x: this.x + this.width / 2 - this.forwardDir() * behind, y: this.yInitial + this.height - 6, dir, size });
     }
@@ -551,6 +559,7 @@ export class Player {
                 k.phase = "down";
                 k.tick = 0;
                 k.rot = 90;
+                this._sound("knockdown");
                 this.fxEvents.push({ type: "dust", x: this.centerX() + k.dir * 60, y: this.yInitial + this.height - 6, dir: k.dir, size: 1.4 });
                 this.fxEvents.push({ type: "dust", x: this.centerX() - k.dir * 20, y: this.yInitial + this.height - 6, dir: -k.dir, size: 1 });
             }
@@ -573,6 +582,7 @@ export class Player {
                 this.jumpTick = 0;
                 this.vy = -JUMP.speed;
                 this._dust(-this.jumpDir || 0, 0, 0.7);
+                this._sound("jump");
             }
             return;
         }
@@ -591,6 +601,7 @@ export class Player {
             if (this.move && this.moveData().air) this.move = null;
             this._dust(1, 25, 0.6);
             this._dust(-1, -25, 0.6);
+            this._sound("land");
         }
     }
 
@@ -607,6 +618,15 @@ export class Player {
         // Step forward over the listed frames
         for (const a of m.advance || []) {
             if (i >= a.frames[0] && i <= a.frames[1]) this.x += (this.forwardDir() * a.px) / ((a.frames[1] - a.frames[0] + 1) * tpf);
+        }
+        // A swing whoosh on the frame before each hit comes out
+        // (or the move's own `swingSound`)
+        for (const h of this.hitsFor(this.move)) {
+            const key = `whoosh@${h.id}`;
+            if (i >= h.frames[0] - 1 && !this.firedFx.has(key)) {
+                this.firedFx.add(key);
+                this._sound(m.swingSound ?? WHOOSH[h.level], { pitch: h.level === "medium" ? -3 : 0 });
+            }
         }
         // Effects tied to a frame of the move (once per move / string)
         for (const fx of m.fx || []) {

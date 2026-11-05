@@ -8,6 +8,7 @@ import { HelpState } from "./HelpState.js";
 import { MenuState } from "./MenuState.js";
 import { EndState } from "./EndState.js";
 import { Settings } from "../settings.js";
+import { Sound } from "../audio/Sound.js";
 
 // Seconds of READY / FIGHT before the round clock starts counting
 const INTRO_SECONDS = 3;
@@ -23,6 +24,10 @@ const VIEW_H = 720;
 const STAGE_ZOOM = 1.5;
 const STAGE_W = VIEW_W * STAGE_ZOOM;
 const CAMERA_FOLLOW = 0.18;
+
+// READY lands this many ticks into the intro, then pulses every READY_BEAT ticks
+const READY_LANDS = 9;
+const READY_BEAT = 30;
 
 // How long a COUNTER / PUNISH callout stays up
 const BANNER_TICKS = 60;
@@ -101,6 +106,7 @@ export class GameState extends State {
 
         this.escape = km.isEscape();
         if (this.escape && !this.isOver()) {
+            if (!this.pause) Sound.play("menu_back");
             this.pause = true;
         }
 
@@ -118,9 +124,12 @@ export class GameState extends State {
         if (this.time > 0 && this.ticks === 60 && !this.hasKO()) {
             this.time -= 1;
             this.ticks = 0;
+            if (this.time === 0) Sound.play("gong");
+            else if (this.time <= 10) Sound.play("clock");
         }
         this.ticks += 1;
         this.introTicks += 1;
+        this.introSounds();
 
         this.background.tick();
         this.effects.tick(this.hitstop > 0);
@@ -154,6 +163,9 @@ export class GameState extends State {
                     else if (fx.type === "swing") this.effects.swing(fx);
                     else if (fx.type === "trail") this.effects.trail(fx);
                     else if (fx.type === "clash") this.effects.clash(fx.x, fx.y, fx.dir, fx.lead);
+                    else if (fx.type === "sound") Sound.play(fx.name, { pan: this.panAt(fx.x), pitch: fx.pitch });
+                    // Dom's dumbbells meet `lead` ticks after the clash effect starts
+                    if (fx.type === "clash") Sound.play("clang", { pan: this.panAt(fx.x), delay: fx.lead / 60 });
                 }
                 p.fxEvents.length = 0;
             }
@@ -180,11 +192,14 @@ export class GameState extends State {
 
         if (this.selection < 2 && this.down && !this.previousDown) {
             this.selection += 1;
+            Sound.play("menu_move");
         } else if (this.selection > 0 && this.up && !this.previousUp) {
             this.selection -= 1;
+            Sound.play("menu_move");
         }
 
         if (this.enter) {
+            Sound.play("menu_select");
             if (this.selection === 0) {
                 this.pause = false;
             } else if (this.selection === 1) {
@@ -200,13 +215,43 @@ export class GameState extends State {
 
     onContact(e) {
         this.hitstop = Math.max(this.hitstop, e.hitstop);
+        const pan = this.panAt(e.x);
         if (e.type === "block") {
             this.effects.spark("block", e.x, e.y, e.dir);
+            Sound.play("block", { pan });
             return;
         }
         this.effects.spark(e.hit.level, e.x, e.y, e.dir, e.ko);
-        if (e.caught) this.banners[e.attacker.playerNum] = { text: e.caught === "punish" ? "PUNISH" : "COUNTER", tick: 0 };
+        Sound.play(`hit_${e.hit.level}`, { pan });
+        if (e.ko && !this.koSounded) {
+            // The finishing blow (later hits on a juggled loser just hit)
+            this.koSounded = true;
+            Sound.play("ko", { pan: pan * 0.5 });
+        }
+        if (e.caught) {
+            this.banners[e.attacker.playerNum] = { text: e.caught === "punish" ? "PUNISH" : "COUNTER", tick: 0 };
+            Sound.play("counter");
+        }
         if (e.shake) this.effects.shake(e.shake, 6 + e.shake);
+    }
+
+    // ---------- Sound ----------
+
+    /** Stereo position for a point in the stage: left of the screen to right. */
+    panAt(x) {
+        const onScreen = (x - this.cameraX) / VIEW_W;
+        return Math.max(-1, Math.min(1, (onScreen * 2 - 1) * 0.6));
+    }
+
+    /** War drum on each READY beat, then the big hit on FIGHT. Matches renderIntro's timing. */
+    introSounds() {
+        const t = this.introTicks;
+        const { FIGHT_START } = GameState;
+        if (t < FIGHT_START && t >= READY_LANDS && (t - READY_LANDS) % READY_BEAT === 0) {
+            Sound.play("drum", { pitch: t === READY_LANDS ? -2 : 0 });
+        } else if (t === FIGHT_START) {
+            Sound.play("fight");
+        }
     }
 
     // ---------- Camera ----------
@@ -385,10 +430,10 @@ export class GameState extends State {
             ctx.fillRect(0, 0, 1280, 720);
 
             // Slam in over 9 ticks, then a heavy heartbeat every half second
-            const enter = Math.min(1, t / 9);
+            const enter = Math.min(1, t / READY_LANDS);
             let scale = 1 + 2.2 * Math.pow(1 - enter, 3);
             if (enter === 1) {
-                const beat = (t - 9) % 30;
+                const beat = (t - READY_LANDS) % READY_BEAT;
                 scale += beat < 6 ? 0.06 * (1 - beat / 6) : 0;
             }
             this.drawSlamText(ctx, "READY", 150, scale, enter);

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fluid Lab</title>
+    <!-- Dev-only simulator for the background fluid (src/components/fluidDriver.js).
+         Not part of the production build: vite only builds index.html. -->
+    <style>
+      :root {
+        --panel: rgba(18, 18, 22, 0.92);
+        --line: #2c2c36;
+        --text: #e6e6ec;
+        --muted: #8d8d9c;
+        --accent: #4a90e2;
+        --changed: #f5b94a;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: var(--text);
+        font: 13px/1.4 -apple-system, 'Segoe UI', Roboto, sans-serif; }
+      #fluid { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+
+      #panel { position: fixed; top: 12px; right: 12px; bottom: 12px; width: 340px; max-width: calc(100vw - 24px);
+        display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line);
+        border-radius: 12px; backdrop-filter: blur(8px); z-index: 10; }
+      #panel.collapsed { bottom: auto; }
+      #panel.collapsed .body, #panel.collapsed .actions { display: none; }
+      .head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px;
+        border-bottom: 1px solid var(--line); gap: 8px; }
+      .head strong { font-size: 14px; }
+      .body { overflow-y: auto; padding: 4px 12px 12px; flex: 1; }
+      .actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px; border-top: 1px solid var(--line); }
+      button { font: inherit; color: var(--text); background: #24242c; border: 1px solid var(--line);
+        border-radius: 7px; padding: 5px 9px; cursor: pointer; }
+      button:hover { background: #2e2e38; }
+      button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+      details { border-bottom: 1px solid var(--line); padding: 6px 0; }
+      summary { cursor: pointer; font-weight: 600; padding: 4px 0; list-style: none; }
+      summary::-webkit-details-marker { display: none; }
+      summary::before { content: '▸ '; color: var(--muted); }
+      details[open] summary::before { content: '▾ '; }
+      .note { color: var(--muted); font-size: 12px; margin: 2px 0 6px; }
+
+      .row { padding: 5px 0; }
+      .row-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+      .row label { font-weight: 500; }
+      .row.changed label { color: var(--changed); }
+      .row .key { color: var(--muted); font: 11px ui-monospace, Menlo, monospace; }
+      .row .help { color: var(--muted); font-size: 11.5px; margin-top: 1px; }
+      .row .restart { color: var(--muted); font-size: 10.5px; border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+      .ctrl { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+      .ctrl input[type='range'] { flex: 1; accent-color: var(--accent); min-width: 0; }
+      .ctrl input[type='number'] { width: 76px; font: 12px ui-monospace, Menlo, monospace; color: var(--text);
+        background: #111116; border: 1px solid var(--line); border-radius: 5px; padding: 2px 4px; }
+      .ctrl select { font: inherit; color: var(--text); background: #111116; border: 1px solid var(--line); border-radius: 5px; padding: 2px 4px; }
+      .ctrl input[type='checkbox'] { accent-color: var(--accent); width: 16px; height: 16px; }
+
+      .ctrl.palette { flex-direction: column; align-items: stretch; }
+      .presets { display: flex; flex-wrap: wrap; gap: 5px; }
+      .presets button { color: #fff; text-shadow: 0 1px 2px #000; border-color: transparent; font-size: 12px; padding: 4px 8px; }
+      .swatches { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 6px; }
+      .swatch { position: relative; display: inline-flex; }
+      .swatch input[type='color'] { width: 34px; height: 34px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: none; cursor: pointer; }
+      .swatch input[type='color']::-webkit-color-swatch-wrapper { padding: 2px; }
+      .swatch input[type='color']::-webkit-color-swatch { border: 0; border-radius: 6px; }
+      .swatch button { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; padding: 0; line-height: 14px;
+        font-size: 11px; border-radius: 50%; display: none; }
+      .swatch:hover button { display: block; }
+      @media (hover: none) { .swatch button { display: block; } }
+      #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #24242c;
+        border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; z-index: 20; display: none; }
+      #export { position: fixed; inset: 10% 10%; z-index: 30; display: none; flex-direction: column; gap: 8px;
+        background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+      #export textarea { flex: 1; width: 100%; font: 12px ui-monospace, Menlo, monospace; color: var(--text);
+        background: #0d0d11; border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+      #hint { position: fixed; left: 12px; bottom: 12px; color: rgba(255, 255, 255, 0.5); font-size: 12px; pointer-events: none; }
+      @media (max-width: 600px) {
+        #panel { top: auto; height: 55vh; left: 12px; width: auto; }
+        #panel.collapsed { height: auto; }
+        #hint { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="fluid"></canvas>
+    <div id="hint">move = push · click = splash · P = pause</div>
+
+    <div id="panel" data-fluid-ignore>
+      <div class="head">
+        <strong>Fluid Lab</strong>
+        <span>
+          <button id="collapse" title="Collapse panel">–</button>
+        </span>
+      </div>
+      <div class="body" id="body"></div>
+      <div class="actions">
+        <button id="refill" title="Add the start-up splats again on top">Re-fill</button>
+        <button id="replay" title="Run the intro swipes again">Replay swipes</button>
+        <button id="restart" title="Start over with these settings">Restart</button>
+        <button id="pause">Pause</button>
+        <button id="reset" title="Back to the values in fluidDriver.js">Reset to site</button>
+        <button id="copy" class="primary" title="Code to paste into fluidDriver.js">Copy settings</button>
+      </div>
+    </div>
+
+    <div id="export" data-fluid-ignore>
+      <strong>Paste into src/components/fluidDriver.js</strong>
+      <textarea id="export-text" readonly></textarea>
+      <div><button id="export-close">Close</button></div>
+    </div>
+    <div id="toast"></div>
+
+    <script type="module" src="/src/fluid-lab/main.js"></script>
+  </body>
+</html>

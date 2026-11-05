@@ -4,6 +4,12 @@ import { asset } from '../asset.js';
 const timelines = {
   experience: [
     {
+      logo: 'img/tmulogo.png',
+      alt: 'Toronto Metropolitan University',
+      title: 'Research Assistant',
+      lines: ['Toronto Metropolitan University', 'Oct 2025 - Jun 2026'],
+    },
+    {
       logo: 'img/eccclogo.png',
       alt: 'Environment & Climate Change Canada',
       title: 'Part-Time Software Developer',

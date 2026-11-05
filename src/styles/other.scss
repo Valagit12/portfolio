@@ -4,11 +4,40 @@ main {
   z-index: 1;
 }
 
+// Behind everything: the fluid's own dark navy (not black), so anything the canvas doesn't
+// cover — Safari's bars, the overscroll edge — blends into the background.
+html {
+  background-color: var(--clr-edge-bottom); // kept in step with the fluid by FluidBackground.jsx
+  transition: background-color 0.8s linear;
+}
+
+// Phones: Safari's bars tint from the page background, so match each half of the page to the
+// fluid's colour at that edge (both kept live by FluidBackground.jsx).
+@media (hover: none) {
+  html {
+    background: linear-gradient(to bottom, var(--clr-edge-top) 50%, var(--clr-edge-bottom) 50%);
+    background-color: var(--clr-edge-top);
+  }
+}
+
+// No rubber-band bounce on phones: pulling past the top/bottom would drag the page away
+// from the fixed fluid and expose the edge.
+html,
+body {
+  overscroll-behavior: none;
+}
+
 body {
   font-family: var(--font-sans);
   color: var(--clr-text);
-  background-color: var(--clr-bg);
+  // Transparent: the fluid canvas is a direct child of <body> (z-index -100), so a body
+  // background would paint over it. The page colour lives on html.
+  background: transparent;
   line-height: 1.6;
+  // Same text rendering in Safari, Chrome and Firefox on macOS (others ignore these).
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 header div {
@@ -38,17 +67,6 @@ header div {
   width: 100%;
 }
 
-.black {
-  position: fixed;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width:100%;
-  background-color: rgba(0, 0, 0, 0.848); 
-  z-index: -5;
-
-}
-
 #fluid {
   background-color: black;
   top: 0;
@@ -56,4 +74,44 @@ header div {
   position: fixed;
   width: 100%;
   height: 100%;
+  // Full height with the mobile address bar hidden, so the layer doesn't resize (and the sim
+  // doesn't re-init) every time the bar shows/hides on iOS/Android. Older browsers use 100%.
+  height: 100lvh;
+  // Input reaches the sim through window listeners (FluidBackground.jsx), so the canvas
+  // never needs to be hit — and it must not swallow touch scrolling.
+  pointer-events: none;
+}
+
+// Hide the page scrollbar everywhere while keeping the page scrollable.
+html,
+body {
+  scrollbar-width: none; // Firefox, Chrome 121+, Safari 18.2+
+  -ms-overflow-style: none; // legacy Edge
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; // older Chrome/Safari/Edge
+  width: 0;
+  height: 0;
+}
+
+// Desktop-only hint pinned to the screen's top-left corner (space sprays splats into the fluid).
+// Meant to be barely there.
+.space-hint {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .space-hint {
+    display: block;
+    position: fixed;
+    top: 12px;
+    left: 14px;
+    z-index: 2;
+    margin: 0;
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.18);
+    pointer-events: none;
+    user-select: none;
+  }
 }

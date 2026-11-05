@@ -5,6 +5,7 @@ import { IntroState } from "./states/IntroState.js";
 import { KeyManager } from "./input/KeyManager.js";
 import { Assets } from "./gfx/Assets.js";
 import { ImageLoader } from "./gfx/ImageLoader.js";
+import { Sound } from "./audio/Sound.js";
 
 const WIDTH = 1280;
 const HEIGHT = 720;
@@ -160,7 +161,11 @@ class Game {
 
 const game = new Game(ctx, WIDTH, HEIGHT);
 
+// Browsers keep audio suspended until a gesture; any key or click wakes it
+window.addEventListener("pointerdown", () => Sound.unlock());
+
 window.addEventListener("keydown", (e) => {
+    Sound.unlock();
     const km = game.getKeyManager();
     // While playing, game keys must not scroll the page or trigger browser
     // shortcuts (e.g. "/" opens Quick Find in Firefox). Leave Cmd/Ctrl combos alone.
@@ -208,6 +213,8 @@ const startButton = document.getElementById("startButton");
 
 startButton.addEventListener("click", async () => {
     const button = startButton;
+    // Inside the click itself, so the browser allows sound
+    Sound.unlock();
     startScreen.hidden = true;
     releaseFocus(button);
 
@@ -218,6 +225,7 @@ startButton.addEventListener("click", async () => {
     ]).catch(() => {});
 
     await game.init();
+    Sound.preload();
     game.start();
 });
 

@@ -5,6 +5,8 @@ $secondary: #4a90e2;
 
 $text-primary: #4a90e2;
 
+$font-family-sans-serif: 'Geist Variable', 'Helvetica Neue', Arial, sans-serif;
+
 $body-bg: #121212;
 $body-color: #ffffff;
 
@@ -17,10 +19,13 @@ $body-color: #ffffff;
 }
 
 :root {
-  --clr-bg: #f9f9f9;
+  --clr-bg: #000;
+  --clr-edge-top: #14263c; // fluid colour at the top / bottom screen edges;
+  --clr-edge-bottom: #050a10; // FluidBackground.jsx keeps both live
   --clr-accent: #4a90e2;
   --clr-text: #333;
-  --font-sans: 'Helvetica Neue', Arial, sans-serif;
+  // Geist (Vercel), bundled with the site (@fontsource-variable/geist) so every browser/OS gets the same font.
+  --font-sans: 'Geist Variable', 'Helvetica Neue', Arial, sans-serif;
 }
 
 

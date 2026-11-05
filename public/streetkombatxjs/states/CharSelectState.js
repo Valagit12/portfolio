@@ -1,5 +1,6 @@
 // ./states/CharSelectState.js
 import { State } from "./State.js";
+import { Sound } from "../audio/Sound.js";
 import { drawFrame } from "../gfx/SpriteSheet.js";
 import { Assets } from "../gfx/Assets.js";
 import { Animation } from "../gfx/Animation.js";
@@ -76,6 +77,8 @@ export class CharSelectState extends State {
         this.enter = km.isEnter();
         this.escape = km.isEscape();
 
+        const before = this.cursorKey();
+
         // Player 1 cursor
         if (this.player1Right && this.player1SelectionHorizontal === 0) {
             this.player1SelectionHorizontal += 1;
@@ -113,6 +116,8 @@ export class CharSelectState extends State {
         ) {
             this.player2SelectionVertical += 1;
         }
+
+        if (this.cursorKey() !== before) Sound.play("menu_move");
 
         // Cursor positions
         this.xPlayer1 = this.player1SelectionHorizontal === 0 ? 487 : 642;
@@ -152,6 +157,15 @@ export class CharSelectState extends State {
         ctx.fillText(this.getCharTitle_Player2(), 1020, 81);
     }
 
+    cursorKey() {
+        return [
+            this.player1SelectionHorizontal,
+            this.player1SelectionVertical,
+            this.player2SelectionHorizontal,
+            this.player2SelectionVertical,
+        ].join();
+    }
+
     confirmSelection() {
         if (
             this.player1SelectionVertical !== 1 &&
@@ -185,12 +199,14 @@ export class CharSelectState extends State {
                 this.player2 = new Kasai(this.game, 1000, 410, 150, 300, 2);
             }
 
+            Sound.play("menu_select");
             State.setState(
                 new StageSelectState(this.game, this.player1, this.player2)
             );
         }
 
         if (this.escape && !this.previousEscape) {
+            Sound.play("menu_back");
             State.setState(new MenuState(this.game));
         }
     }

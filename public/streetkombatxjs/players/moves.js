@@ -222,6 +222,7 @@ export const DOM_SPECIAL = {
 // does too. Small pushback so Kasai can use the +22 to follow up.
 export const KASAI_SPECIAL = {
     anim: "special", end: 10, recovery: 28, recoveryOnHit: 0, label: "Special",
+    swingSound: "fire", // instead of the usual whoosh (see audio/sfx.js)
     // Big burning arc from overhead down in front (fires a frame early: 6 ticks per frame)
     fx: [{ frame: 6, type: "swing", style: "fire", center: [80, 100], radius: 230, from: -100, to: 50, width: 44, life: 16 }],
     hits: [hit({ id: "sp", frames: [7, 7], box: [85, 40, 285, 290], damage: 7, level: "special", height: HEIGHT.OVERHEAD, push: 12, blockPush: 22, onHit: 22, onBlock: -12 })],
