@@ -43,6 +43,11 @@ export class CharSelectState extends State {
         this.player1 = null;
         this.player2 = null;
 
+        // The on-screen pad has one d-pad, so on touch the pick takes two
+        // steps: Start locks player 1's fighter, then the d-pad moves player
+        // 2's cursor and Start again confirms. The keyboard confirms both at once.
+        this.player1Locked = false;
+
         this.charSelectScreen = Assets.charSelectScreen;
 
         this.dom_stance_player1 = new Animation(66.668, Assets.dom_stance_player1);
@@ -74,6 +79,15 @@ export class CharSelectState extends State {
         this.player2Left = km.isPlayer2_left();
         this.player2Up = km.isPlayer2_jump();
         this.player2Down = km.isPlayer2_crouch();
+
+        if (this.player1Locked) {
+            // Player 1 has picked; the d-pad (or the arrows) now moves player 2
+            this.player1Right = this.player1Left = this.player1Up = this.player1Down = false;
+            this.player2Right = km.isMenuRight();
+            this.player2Left = km.isMenuLeft();
+            this.player2Up = km.isMenuUp();
+            this.player2Down = km.isMenuDown();
+        }
 
         this.enter = km.isEnter();
         this.escape = km.isEscape();
@@ -156,10 +170,13 @@ export class CharSelectState extends State {
         ctx.fillStyle = "red";
         ctx.fillText(this.getCharTitle_Player1(), 77, 81);
         ctx.fillText(this.getCharTitle_Player2(), 1020, 81);
+        ctx.font = Assets.dragonForce;
         // Player 2 is the computer (menu setting)
         if (Settings.cpu) {
-            ctx.font = Assets.dragonForce;
             ctx.fillText("CPU", 1020, 130);
+        }
+        if (this.player1Locked) {
+            ctx.fillText("Ready", 77, 130);
         }
     }
 
@@ -173,11 +190,29 @@ export class CharSelectState extends State {
     }
 
     confirmSelection() {
+        const km = this.game.getKeyManager();
+        const enterPressed = this.enter && !this.previousEnter;
+        const escapePressed = this.escape && !this.previousEscape;
+
+        // Touch, first step: lock player 1's fighter
+        if (enterPressed && km.touchActive && !this.player1Locked) {
+            if (this.player1SelectionVertical !== 1) {
+                this.player1Locked = true;
+                Sound.play("menu_select");
+            }
+            return;
+        }
+        // Back from the second step unlocks player 1 instead of leaving
+        if (escapePressed && this.player1Locked) {
+            this.player1Locked = false;
+            Sound.play("menu_back");
+            return;
+        }
+
         if (
             this.player1SelectionVertical !== 1 &&
             this.player2SelectionVertical !== 1 &&
-            this.enter &&
-            !this.previousEnter
+            enterPressed
         ) {
             // P1
             if (
@@ -211,7 +246,7 @@ export class CharSelectState extends State {
             );
         }
 
-        if (this.escape && !this.previousEscape) {
+        if (escapePressed) {
             Sound.play("menu_back");
             State.setState(new MenuState(this.game));
         }

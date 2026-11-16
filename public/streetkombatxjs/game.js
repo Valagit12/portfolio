@@ -3,6 +3,8 @@
 import { State } from "./states/State.js";
 import { IntroState } from "./states/IntroState.js";
 import { KeyManager } from "./input/KeyManager.js";
+import { TouchControls } from "./input/TouchControls.js";
+import { GameState } from "./states/GameState.js";
 import { Assets } from "./gfx/Assets.js";
 import { ImageLoader } from "./gfx/ImageLoader.js";
 import { Sound } from "./audio/Sound.js";
@@ -182,11 +184,26 @@ window.addEventListener("keyup", (e) => {
     game.getKeyManager().onKeyUp(e);
 });
 
+// ---------- Touch: the on-screen pad (input/TouchControls.js) ----------
+
+// Shown on phones and tablets, and on any device as soon as the screen is touched
+const root = document.documentElement;
+if (matchMedia("(pointer: coarse)").matches) root.classList.add("has-touch");
+window.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "touch") root.classList.add("has-touch");
+});
+
+const touch = new TouchControls(document.getElementById("touchpad"), game.getKeyManager());
+
 // Key-ups are never delivered while the tab is unfocused, which left fighters
 // walking or blocking forever after an alt-tab. Release everything instead.
-window.addEventListener("blur", () => game.getKeyManager().releaseAll());
+function releaseAll() {
+    game.getKeyManager().releaseAll();
+    touch.reset();
+}
+window.addEventListener("blur", releaseAll);
 document.addEventListener("visibilitychange", () => {
-    if (document.hidden) game.getKeyManager().releaseAll();
+    if (document.hidden) releaseAll();
 });
 
 // ---------- Page chrome: start screen, sound toggle, fullscreen ----------
@@ -200,7 +217,11 @@ Music.init({
     next: document.getElementById("musicNext"),
     slot: document.getElementById("musicPlayer"),
 });
-State.onChange = (state) => Music.setMode(state.constructor.music ?? "menu");
+State.onChange = (state) => {
+    Music.setMode(state.constructor.music ?? "menu");
+    // The pad's Escape button pauses a fight and backs out of menus
+    touch.setBackLabel(state instanceof GameState ? "Pause" : "Back");
+};
 const soundToggle = document.getElementById("soundToggle");
 const fullscreenToggle = document.getElementById("fullscreenToggle");
 const stage = document.getElementById("stage");
@@ -228,6 +249,7 @@ startButton.addEventListener("click", async () => {
     // Inside the click itself, so the browser allows sound
     Sound.unlock();
     startScreen.hidden = true;
+    root.classList.add("playing"); // shows the touch pad
     releaseFocus(button);
 
     // Make sure the game font is ready before anything is drawn with it
@@ -247,13 +269,24 @@ soundToggle.addEventListener("click", () => {
     releaseFocus(soundToggle);
 });
 
-fullscreenToggle.addEventListener("click", () => {
+fullscreenToggle.addEventListener("click", async () => {
+    releaseFocus(fullscreenToggle);
     if (document.fullscreenElement) {
         document.exitFullscreen();
-    } else {
-        stage.requestFullscreen?.();
+        return;
     }
-    releaseFocus(fullscreenToggle);
+    if (!root.classList.contains("has-touch")) {
+        stage.requestFullscreen?.();
+        return;
+    }
+    // On touch the pad sits outside the stage, so the whole page goes
+    // fullscreen, turned sideways where the browser allows it (Android)
+    try {
+        await root.requestFullscreen();
+        await screen.orientation?.lock?.("landscape");
+    } catch {
+        // fullscreen or the orientation lock refused: play as is
+    }
 });
 
 if (!document.fullscreenEnabled) fullscreenToggle.hidden = true;

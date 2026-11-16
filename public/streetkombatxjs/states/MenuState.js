@@ -42,10 +42,10 @@ export class MenuState extends State {
     tick() {
         const km = this.game.getKeyManager();
 
-        this.up = km.isPlayer2_jump();
-        this.down = km.isPlayer2_crouch();
-        this.left = km.isPlayer2_left();
-        this.right = km.isPlayer2_right();
+        this.up = km.isMenuUp();
+        this.down = km.isMenuDown();
+        this.left = km.isMenuLeft();
+        this.right = km.isMenuRight();
         this.enter = km.isEnter();
 
         const before = `${this.selection}/${Settings.roundTime}/${Settings.cpu}`;

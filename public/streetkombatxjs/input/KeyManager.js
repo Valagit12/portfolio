@@ -37,6 +37,11 @@ const BINDINGS = {
 
 const MENU_KEYS = { enter: ["Enter", "NumpadEnter"], escape: ["Escape"] };
 
+// The on-screen pad (input/TouchControls.js) plays player 1, so in a fight its
+// buttons press player 1's keys. Start and Back are Enter and Escape.
+const TOUCH_CODES = { ...BINDINGS[1], enter: "Enter", escape: "Escape" };
+const DIRECTIONS = ["up", "down", "left", "right"];
+
 const GAME_KEYS = new Set([
     ...Object.values(BINDINGS[1]),
     ...Object.values(BINDINGS[2]),
@@ -59,6 +64,12 @@ export class KeyManager {
         // the keyboard.
         this.cpu = new Set();
 
+        // On-screen pad: actions held now, and pressed since the last tick
+        this.touch = new Set();
+        this.touchTapped = new Set();
+        // Was the pad used more recently than the keyboard?
+        this.touchActive = false;
+
         // Per-tick snapshot used by the menus
         this.player1_jump = false;
         this.player1_crouch = false;
@@ -80,6 +91,12 @@ export class KeyManager {
 
         this.enter = false;
         this.escape = false;
+
+        // Menu navigation: the arrow keys or the pad's d-pad
+        this.menu_up = false;
+        this.menu_down = false;
+        this.menu_left = false;
+        this.menu_right = false;
     }
 
     // Called once per tick (60 times per second) from Game.tick()
@@ -109,7 +126,13 @@ export class KeyManager {
             this[`player${n}_special`] = down(b.special);
         }
 
+        const touched = (action) => this.touch.has(action) || this.touchTapped.has(action);
+        for (const dir of DIRECTIONS) {
+            this[`menu_${dir}`] = down(BINDINGS[2][dir]) || touched(dir);
+        }
+
         this.tapped.clear();
+        this.touchTapped.clear();
     }
 
     // ---- Fighter input ----
@@ -173,11 +196,26 @@ export class KeyManager {
 
     /** The CPU pressing an action: exactly like a key going down. */
     cpuDown(playerNum, action) {
-        this.onKeyDown({ code: `CPU${playerNum}:${action}` });
+        this.press(`CPU${playerNum}:${action}`);
     }
 
     cpuUp(playerNum, action) {
         this.held.delete(`CPU${playerNum}:${action}`);
+    }
+
+    // ---- On-screen pad (input/TouchControls.js) ----
+
+    /** A pad button going down: exactly like its key going down. */
+    touchDown(action) {
+        this.touchActive = true;
+        this.touch.add(action);
+        this.touchTapped.add(action);
+        this.press(TOUCH_CODES[action]);
+    }
+
+    touchUp(action) {
+        this.touch.delete(action);
+        this.held.delete(TOUCH_CODES[action]);
     }
 
     // ---- DOM wiring ----
@@ -187,10 +225,15 @@ export class KeyManager {
     }
 
     onKeyDown(e) {
-        const code = e.code;
-        if (!code) return;
+        if (!e.code) return;
+        this.touchActive = false;
         // Auto-repeat is not a new press
-        if (e.repeat || this.held.has(code)) return;
+        if (e.repeat) return;
+        this.press(e.code);
+    }
+
+    press(code) {
+        if (this.held.has(code)) return;
         this.held.add(code);
         this.tapped.add(code);
         this.pressedAt.set(code, this.tickCount);
@@ -206,6 +249,8 @@ export class KeyManager {
     releaseAll() {
         this.held.clear();
         this.tapped.clear();
+        this.touch.clear();
+        this.touchTapped.clear();
         this.pressedAt.clear();
         this.lastPressAt.clear();
         this.prevPressAt.clear();
@@ -283,5 +328,21 @@ export class KeyManager {
 
     isEscape() {
         return this.escape;
+    }
+
+    isMenuUp() {
+        return this.menu_up;
+    }
+
+    isMenuDown() {
+        return this.menu_down;
+    }
+
+    isMenuLeft() {
+        return this.menu_left;
+    }
+
+    isMenuRight() {
+        return this.menu_right;
     }
 }

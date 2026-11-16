@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Street Kombat X</title>
     <link rel="preload" href="./res/font/DragonForcE.ttf" as="font" type="font/ttf" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -34,6 +34,15 @@
             --header-h: 60px;
             --controls-h: 112px;
             --gutter: 16px;
+            /* Room kept beside and under the stage for the touch pad */
+            --stage-side: 0px;
+            --pad-h: 0px;
+
+            /* Touch pad */
+            --dpad: 150px;
+            --btn: 62px;
+            --btn-gap: 12px;
+            --btn-stagger: 18px;
         }
 
         *,
@@ -141,8 +150,8 @@
             position: relative;
             /* Largest 16:9 box that fits beside the header and controls */
             width: min(1280px,
-                    calc(100vw - 2 * var(--gutter)),
-                    calc((100dvh - var(--header-h) - var(--controls-h) - 3 * var(--gutter)) * 16 / 9));
+                    calc(100vw - 2 * var(--gutter) - 2 * var(--stage-side)),
+                    calc((100dvh - var(--header-h) - var(--controls-h) - var(--pad-h) - 3 * var(--gutter)) * 16 / 9));
             min-width: 288px;
             aspect-ratio: 16 / 9;
             overflow: hidden;
@@ -228,9 +237,247 @@
             color: var(--blood-lit);
         }
 
-        @media (pointer: coarse) {
-            .touch-note {
-                display: block;
+        .has-touch .touch-note {
+            display: block;
+        }
+
+        /* ---------- Touch pad: d-pad left, buttons right (input/TouchControls.js) ---------- */
+        .touchpad {
+            display: none;
+            width: min(100%, 640px);
+            justify-content: space-between;
+            gap: 16px;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .has-touch.playing .touchpad {
+            display: flex;
+        }
+
+        /* Both sides as tall as the taller one: Back and Start line up on top */
+        .pad-side {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .pad-left {
+            align-items: flex-start;
+        }
+
+        .pad-right {
+            align-items: flex-end;
+        }
+
+        .touchpad button {
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
+        }
+
+        .pad-pill {
+            height: 34px;
+            min-width: 76px;
+            padding: 0 16px;
+            border-radius: 17px;
+            border: 1px solid var(--ash);
+            background: rgb(0 0 0 / 0.55);
+            color: var(--bone);
+            font: 600 15px var(--font-ui);
+        }
+
+        .pad-pill.on {
+            background: var(--blood);
+            border-color: var(--blood-lit);
+        }
+
+        .dpad {
+            position: relative;
+            width: var(--dpad);
+            height: var(--dpad);
+            border-radius: 50%;
+            border: 1px solid var(--ember);
+            background: rgb(31 0 0 / 0.6);
+            touch-action: none;
+        }
+
+        /* Four arms of a cross; the thumb's angle, not the arm it's on, picks the direction */
+        .dpad-arm {
+            position: absolute;
+            width: 32%;
+            height: 34%;
+            border: 1px solid var(--ash);
+            border-radius: 6px;
+            background: rgb(155 127 123 / 0.14);
+            pointer-events: none;
+        }
+
+        .dpad-arm::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            margin: auto;
+            width: 0;
+            height: 0;
+            border: 7px solid transparent;
+        }
+
+        .dpad-arm[data-dir="up"] {
+            top: 6%;
+            left: 34%;
+            border-bottom: 0;
+            border-radius: 6px 6px 0 0;
+        }
+
+        .dpad-arm[data-dir="down"] {
+            bottom: 6%;
+            left: 34%;
+            border-top: 0;
+            border-radius: 0 0 6px 6px;
+        }
+
+        .dpad-arm[data-dir="left"] {
+            left: 6%;
+            top: 34%;
+            width: 34%;
+            height: 32%;
+            border-right: 0;
+            border-radius: 6px 0 0 6px;
+        }
+
+        .dpad-arm[data-dir="right"] {
+            right: 6%;
+            top: 34%;
+            width: 34%;
+            height: 32%;
+            border-left: 0;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .dpad-arm[data-dir="up"]::after {
+            border-bottom-color: var(--bone);
+            border-top-width: 0;
+        }
+
+        .dpad-arm[data-dir="down"]::after {
+            border-top-color: var(--bone);
+            border-bottom-width: 0;
+        }
+
+        .dpad-arm[data-dir="left"]::after {
+            border-right-color: var(--bone);
+            border-left-width: 0;
+        }
+
+        .dpad-arm[data-dir="right"]::after {
+            border-left-color: var(--bone);
+            border-right-width: 0;
+        }
+
+        .dpad-arm.on {
+            background: var(--blood);
+            border-color: var(--blood-lit);
+        }
+
+        /* Arcade layout: the top row sits a little to the right of the bottom one */
+        .pad-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, var(--btn));
+            gap: var(--btn-gap);
+            padding-left: var(--btn-stagger);
+        }
+
+        .pad-btn {
+            width: var(--btn);
+            height: var(--btn);
+            padding: 0;
+            border-radius: 50%;
+            border: 2px solid var(--blood);
+            background: rgb(0 0 0 / 0.55);
+            color: var(--bone);
+            font: 800 14px/1 var(--font-ui);
+            transform: translateX(var(--shift, 0px));
+        }
+
+        .pad-btn:nth-child(n + 3) {
+            --shift: calc(-1 * var(--btn-stagger));
+        }
+
+        .pad-btn[data-action="special"] {
+            border-color: var(--blood-lit);
+        }
+
+        .pad-btn[data-action="block"] {
+            border-color: var(--ash);
+        }
+
+        .pad-btn.on {
+            background: var(--blood);
+            border-color: var(--blood-lit);
+            transform: translateX(var(--shift, 0px)) scale(0.94);
+        }
+
+        /* On touch the keyboard legend is no use; the music player stays, centered */
+        .has-touch .controls {
+            display: flex;
+            justify-content: center;
+        }
+
+        .has-touch .controls section:not(.music) {
+            display: none;
+        }
+
+        .has-touch .controls section.music {
+            border: 0;
+            padding: 0;
+        }
+
+        /* Portrait: the pad sits under the stage, which shrinks to leave it room */
+        @media (orientation: portrait) {
+            .has-touch.playing {
+                --pad-h: calc(var(--dpad) + 34px + 12px + 20px);
+            }
+        }
+
+        /* Landscape: the pad sits in the margins beside the stage */
+        @media (orientation: landscape) {
+            .has-touch.playing {
+                --stage-side: calc(max(var(--dpad), 2 * var(--btn) + var(--btn-gap) + var(--btn-stagger)) + 8px + env(safe-area-inset-left, 0px));
+            }
+
+            .has-touch.playing .touchpad {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: auto;
+                padding: 0 max(var(--gutter), env(safe-area-inset-right)) max(var(--gutter), env(safe-area-inset-bottom)) max(var(--gutter), env(safe-area-inset-left));
+                pointer-events: none;
+                z-index: 10;
+            }
+
+            .has-touch.playing .pad-side > * {
+                pointer-events: auto;
+            }
+        }
+
+        /* Phones turned sideways: a slimmer header and a pad scaled to the height */
+        @media (orientation: landscape) and (max-height: 560px) {
+            .has-touch.playing {
+                --header-h: 44px;
+                --dpad: min(150px, 40vh);
+                --btn: min(62px, 16vh);
+                --btn-gap: 10px;
+            }
+
+            .has-touch.playing .icon-btn {
+                height: 32px;
             }
         }
 
@@ -373,7 +620,8 @@
                 --controls-h: 0px;
             }
 
-            .controls {
+            .controls,
+            .has-touch .controls {
                 display: none;
             }
         }
@@ -418,7 +666,29 @@
             <div class="start-screen" id="startScreen">
                 <h1 class="start-title">Street Kombat X</h1>
                 <button class="start-btn" id="startButton" type="button" autofocus>Start game</button>
-                <p class="touch-note">This game needs a keyboard.</p>
+                <p class="touch-note">Touch controls included. Best played sideways.</p>
+            </div>
+        </div>
+
+        <!-- On-screen pad for touch screens; it drives player 1 (input/TouchControls.js) -->
+        <div class="touchpad" id="touchpad" aria-hidden="true">
+            <div class="pad-side pad-left">
+                <button class="pad-pill" type="button" tabindex="-1" data-action="escape"><span data-back-label>Back</span></button>
+                <div class="dpad" data-dpad>
+                    <span class="dpad-arm" data-dir="up"></span>
+                    <span class="dpad-arm" data-dir="down"></span>
+                    <span class="dpad-arm" data-dir="left"></span>
+                    <span class="dpad-arm" data-dir="right"></span>
+                </div>
+            </div>
+            <div class="pad-side pad-right">
+                <button class="pad-pill" type="button" tabindex="-1" data-action="enter">Start</button>
+                <div class="pad-buttons">
+                    <button class="pad-btn" type="button" tabindex="-1" data-action="two">Atk 2</button>
+                    <button class="pad-btn" type="button" tabindex="-1" data-action="special">Special</button>
+                    <button class="pad-btn" type="button" tabindex="-1" data-action="one">Atk 1</button>
+                    <button class="pad-btn" type="button" tabindex="-1" data-action="block">Block</button>
+                </div>
             </div>
         </div>
 

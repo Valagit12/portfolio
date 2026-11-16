@@ -26,8 +26,8 @@ export class HelpState extends State {
     tick() {
         const km = this.game.getKeyManager();
 
-        this.right = km.isPlayer2_right();
-        this.left = km.isPlayer2_left();
+        this.right = km.isMenuRight();
+        this.left = km.isMenuLeft();
         this.escape = km.isEscape();
 
         if (this.pagelvl < 4 && this.right && !this.previousRight) {

@@ -195,8 +195,8 @@ export class GameState extends State {
     }
 
     tickPauseMenu(km) {
-        this.up = km.isPlayer2_jump();
-        this.down = km.isPlayer2_crouch();
+        this.up = km.isMenuUp();
+        this.down = km.isMenuDown();
         this.enter = km.isEnter();
 
         if (this.selection < 2 && this.down && !this.previousDown) {

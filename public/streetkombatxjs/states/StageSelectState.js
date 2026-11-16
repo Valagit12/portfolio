@@ -37,10 +37,10 @@ export class StageSelectState extends State {
 
         const km = this.game.getKeyManager();
 
-        this.right = km.isPlayer2_right();
-        this.left = km.isPlayer2_left();
-        this.up = km.isPlayer2_jump();
-        this.down = km.isPlayer2_crouch();
+        this.right = km.isMenuRight();
+        this.left = km.isMenuLeft();
+        this.up = km.isMenuUp();
+        this.down = km.isMenuDown();
 
         this.enter = km.isEnter();
         this.escape = km.isEscape();
@@ -83,7 +83,7 @@ export class StageSelectState extends State {
         ctx.font = Assets.dragonForceNum;
         ctx.fillStyle = "red";
         ctx.fillText(this.player1.getCharTitle(), 77, 81);
-        ctx.fillText(this.player1.getCharTitle(), 1020, 81);
+        ctx.fillText(this.player2.getCharTitle(), 1020, 81);
         ctx.fillText(this.getStageTitle(), 425, 180);
 
         ctx.strokeStyle = "red";
